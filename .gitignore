@@ -54,3 +54,5 @@ build/config\.gypi
 pnpm-lock.yaml
 /.history
 .next
+.env
+.env.local
