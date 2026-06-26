@@ -7,7 +7,6 @@ import { api } from "@/lib/convexApi";
 import AdminPageLoader from "@/components/admin/AdminPageLoader";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import GeneralInput from "@/components/admin/inputs/GeneralInput";
-import CTA from "@/components/admin/CTA";
 import { useAdminSaveErrorPopup } from "@/hooks/useAdminSaveErrorPopup";
 import { requiredError } from "@/lib/admin/required";
 import { GripVertical, Plus, Trash2 } from "lucide-react";

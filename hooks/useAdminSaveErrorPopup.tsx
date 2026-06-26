@@ -7,7 +7,6 @@ export type AdminSaveErrorPopupOptions = {
   title?: string;
   description?: React.ReactNode;
   buttonText?: string;
-
   includeErrorMessage?: boolean;
 };
 

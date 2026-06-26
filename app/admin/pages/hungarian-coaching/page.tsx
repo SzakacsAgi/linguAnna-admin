@@ -17,6 +17,7 @@ import RichTextEditor from "@/components/admin/inputs/RichTextEditor";
 import { requiredError } from "@/lib/admin/required";
 import { useAdminSaveErrorPopup } from "@/hooks/useAdminSaveErrorPopup";
 import { useAdminLanguage } from "@/components/admin/language/AdminLanguageProvider";
+import SharedContentNavigator from '@/components/admin/SharedContentNavigator';
 
 type ImageBlock = {
   id: string;
@@ -31,17 +32,13 @@ type PricingBlock = {
   id: string;
   name?: string;
   sessionsLabel?: string;
-  price?: string;
+  priceHUF?: string;
+  priceEUR?: string;
   validity?: string;
   buttonText?: string;
   buttonLink?: string;
-  badge?: string;
-};
-
-type TestimonialBlock = {
-  id: string;
-  quote?: string;
-  author?: string;
+  mostPopularBadgeText?: string;
+  mostPopular?: boolean;
 };
 
 type FaqBlock = {
@@ -60,73 +57,6 @@ const sections = [
   { key: "testimonials", label: "Testimonials" },
   { key: "faq", label: "FAQ" },
   { key: "bottom_cta", label: "Bottom CTA" },
-];
-
-const DEFAULT_PATH_BLOCKS: ImageBlock[] = [
-  {
-    id: "path-1",
-    heading: "",
-    body: "",
-    imageStorageId: undefined,
-    imageAlt: "",
-  },
-  {
-    id: "path-2",
-    heading: "",
-    body: "",
-    imageStorageId: undefined,
-    imageAlt: "",
-  },
-];
-
-const DEFAULT_PRICING_BLOCKS: PricingBlock[] = [
-  {
-    id: "pricing-1",
-    name: "",
-    sessionsLabel: "",
-    price: "",
-    validity: "",
-    buttonText: "",
-    buttonLink: "",
-    badge: "",
-  },
-  {
-    id: "pricing-2",
-    name: "",
-    sessionsLabel: "",
-    price: "",
-    validity: "",
-    buttonText: "",
-    buttonLink: "",
-    badge: "",
-  },
-  {
-    id: "pricing-3",
-    name: "",
-    sessionsLabel: "",
-    price: "",
-    validity: "",
-    buttonText: "",
-    buttonLink: "",
-    badge: "",
-  },
-];
-
-const DEFAULT_TESTIMONIAL_BLOCKS: TestimonialBlock[] = [
-  {
-    id: "testimonial-1",
-    quote: "",
-    author: "",
-  },
-];
-
-const DEFAULT_FAQ_BLOCKS: FaqBlock[] = [
-  { id: "faq-1", question: "", answer: "" },
-  { id: "faq-2", question: "", answer: "" },
-  { id: "faq-3", question: "", answer: "" },
-  { id: "faq-4", question: "", answer: "" },
-  { id: "faq-5", question: "", answer: "" },
-  { id: "faq-6", question: "", answer: "" },
 ];
 
 export default function HungarianCoachingPageEditor() {
@@ -160,19 +90,19 @@ export default function HungarianCoachingPageEditor() {
     }
 
     if (!map.paths.blocks || map.paths.blocks.length === 0) {
-      map.paths = { ...map.paths, blocks: DEFAULT_PATH_BLOCKS };
+      map.paths = { ...map.paths, blocks: [] };
     }
 
     if (!map.pricing.blocks || map.pricing.blocks.length === 0) {
-      map.pricing = { ...map.pricing, blocks: DEFAULT_PRICING_BLOCKS };
+      map.pricing = { ...map.pricing, blocks: [] };
     }
 
     if (!map.testimonials.blocks || map.testimonials.blocks.length === 0) {
-      map.testimonials = { ...map.testimonials, blocks: DEFAULT_TESTIMONIAL_BLOCKS };
+      map.testimonials = { ...map.testimonials, blocks: [] };
     }
 
     if (!map.faq.blocks || map.faq.blocks.length === 0) {
-      map.faq = { ...map.faq, blocks: DEFAULT_FAQ_BLOCKS };
+      map.faq = { ...map.faq, blocks: [] };
     }
 
     setFormData(map);
@@ -231,6 +161,8 @@ export default function HungarianCoachingPageEditor() {
       }
       return next;
     });
+
+    setHasChanges(true);
   };
 
   const moveBlock = (sectionKey: string, from: number, to: number) => {
@@ -247,7 +179,7 @@ export default function HungarianCoachingPageEditor() {
     const hero = formData.hero ?? {};
     const heroErrs: any = {};
     if (requiredError(hero.eyebrow)) heroErrs.eyebrow = requiredError(hero.eyebrow);
-    if (requiredError(hero.heading)) heroErrs.heading = requiredError(hero.heading);
+    if (requiredError(hero.heading, true)) heroErrs.heading = requiredError(hero.heading, true);
     if (requiredError(hero.body, true)) heroErrs.body = requiredError(hero.body, true);
     if (requiredError(hero.buttonText)) heroErrs.buttonText = requiredError(hero.buttonText);
     if (requiredError(hero.buttonLink)) heroErrs.buttonLink = requiredError(hero.buttonLink);
@@ -256,12 +188,12 @@ export default function HungarianCoachingPageEditor() {
     const paths = formData.paths ?? {};
     const pathsErrs: any = {};
     if (requiredError(paths.eyebrow)) pathsErrs.eyebrow = requiredError(paths.eyebrow);
-    if (requiredError(paths.heading)) pathsErrs.heading = requiredError(paths.heading);
+    if (requiredError(paths.heading, true)) pathsErrs.heading = requiredError(paths.heading, true);
 
     const pathBlocks = (paths.blocks ?? []) as ImageBlock[];
     const pathBlockErrs = pathBlocks.map((b) => {
       const e: any = {};
-      if (requiredError(b.heading)) e.heading = requiredError(b.heading);
+      if (requiredError(b.heading, true)) e.heading = requiredError(b.heading, true);
       if (requiredError(b.body, true)) e.body = requiredError(b.body, true);
       if (requiredError(b.imageStorageId)) e.imageStorageId = requiredError(b.imageStorageId);
       if (requiredError(b.imageAlt)) e.imageAlt = requiredError(b.imageAlt);
@@ -273,21 +205,18 @@ export default function HungarianCoachingPageEditor() {
     const pricing = formData.pricing ?? {};
     const pricingErrs: any = {};
     if (requiredError(pricing.eyebrow)) pricingErrs.eyebrow = requiredError(pricing.eyebrow);
-    if (requiredError(pricing.heading)) pricingErrs.heading = requiredError(pricing.heading);
-    if (requiredError(pricing.footerText)) pricingErrs.footerText = requiredError(pricing.footerText);
-    if (requiredError(pricing.footerLinkText)) pricingErrs.footerLinkText = requiredError(pricing.footerLinkText);
-    if (requiredError(pricing.footerLinkHref)) pricingErrs.footerLinkHref = requiredError(pricing.footerLinkHref);
+    if (requiredError(pricing.heading, true)) pricingErrs.heading = requiredError(pricing.heading, true);
 
     const pricingBlocks = (pricing.blocks ?? []) as PricingBlock[];
     const pricingBlockErrs = pricingBlocks.map((b) => {
       const e: any = {};
       if (requiredError(b.name)) e.name = requiredError(b.name);
       if (requiredError(b.sessionsLabel)) e.sessionsLabel = requiredError(b.sessionsLabel);
-      if (requiredError(b.price)) e.price = requiredError(b.price);
+      if (requiredError(b.priceEUR)) e.priceEUR = requiredError(b.priceEUR);
+      if (requiredError(b.priceHUF)) e.priceHUF = requiredError(b.priceHUF);
       if (requiredError(b.validity)) e.validity = requiredError(b.validity);
       if (requiredError(b.buttonText)) e.buttonText = requiredError(b.buttonText);
       if (requiredError(b.buttonLink)) e.buttonLink = requiredError(b.buttonLink);
-      if (requiredError(b.badge)) e.badge = requiredError(b.badge);
       return e;
     });
     if (pricingBlockErrs.some((e) => Object.keys(e).length)) pricingErrs.blocks = pricingBlockErrs;
@@ -295,35 +224,30 @@ export default function HungarianCoachingPageEditor() {
 
     const inlineCta = formData.inline_cta ?? {};
     const inlineCtaErrs: any = {};
-    if (requiredError(inlineCta.text)) inlineCtaErrs.text = requiredError(inlineCta.text);
-    if (requiredError(inlineCta.linkText)) inlineCtaErrs.linkText = requiredError(inlineCta.linkText);
-    if (requiredError(inlineCta.linkHref)) inlineCtaErrs.linkHref = requiredError(inlineCta.linkHref);
+    if (requiredError(inlineCta.heading, true)) {
+      inlineCtaErrs.heading = requiredError(inlineCta.heading, true);
+    }
+    if (requiredError(inlineCta.subheading, true)) {
+      inlineCtaErrs.subheading = requiredError(inlineCta.subheading, true);
+    }
     if (Object.keys(inlineCtaErrs).length) next.inline_cta = inlineCtaErrs;
 
     const testimonials = formData.testimonials ?? {};
     const testimonialsErrs: any = {};
-    if (requiredError(testimonials.eyebrow)) testimonialsErrs.eyebrow = requiredError(testimonials.eyebrow);
-
-    const testimonialBlocks = (testimonials.blocks ?? []) as TestimonialBlock[];
-    const testimonialBlockErrs = testimonialBlocks.map((b) => {
-      const e: any = {};
-      if (requiredError(b.quote, true)) e.quote = requiredError(b.quote, true);
-      if (requiredError(b.author)) e.author = requiredError(b.author);
-      return e;
-    });
-    if (testimonialBlockErrs.some((e) => Object.keys(e).length)) {
-      testimonialsErrs.blocks = testimonialBlockErrs;
+    if (requiredError(testimonials.eyebrow, true)) {
+      testimonialsErrs.eyebrow = requiredError(testimonials.eyebrow, true);
     }
+
     if (Object.keys(testimonialsErrs).length) next.testimonials = testimonialsErrs;
 
     const faq = formData.faq ?? {};
     const faqErrs: any = {};
-    if (requiredError(faq.heading)) faqErrs.heading = requiredError(faq.heading);
+    if (requiredError(faq.heading, true)) faqErrs.heading = requiredError(faq.heading, true);
 
     const faqBlocks = (faq.blocks ?? []) as FaqBlock[];
     const faqBlockErrs = faqBlocks.map((b) => {
       const e: any = {};
-      if (requiredError(b.question)) e.question = requiredError(b.question);
+      if (requiredError(b.question, true)) e.question = requiredError(b.question, true);
       if (requiredError(b.answer, true)) e.answer = requiredError(b.answer, true);
       return e;
     });
@@ -412,6 +336,14 @@ export default function HungarianCoachingPageEditor() {
 
   const s = (key: string) => formData[key] ?? {};
 
+  const sharedContentNavigatorMap: Record<string, { href: string; navLabel: string; textBeforNav: string }> = {
+    testimonials: {
+      href: "/admin/shared/testimonials",
+      navLabel: "Shared Content → Testimonials",
+      textBeforNav: "Edit your testimonials in",
+    },
+  };
+
   return (
     <AdminPageLayout
       pageTitle="Edit Hungarian Coaching Page"
@@ -432,13 +364,17 @@ export default function HungarianCoachingPageEditor() {
             placeholder="LinguAnna Coaching"
             error={errors.hero?.eyebrow}
           />
-          <GeneralInput
+
+          <RichTextEditor
             label="Main heading"
+            editorKey="hungarian-coaching-hero-heading"
             value={s("hero").heading ?? ""}
-            onChange={(e) => updateSection("hero", { heading: e.target.value })}
+            onChange={(v) => updateSection("hero", { heading: v })}
             placeholder="Stop being on the outside..."
+            tools={["bold", "italic", "color", "fontWeight"]}
             error={errors.hero?.heading}
           />
+
           <RichTextEditor
             label="Intro text"
             editorKey="hungarian-coaching-hero-body"
@@ -448,6 +384,7 @@ export default function HungarianCoachingPageEditor() {
             tools={["bold", "italic", "link", "color"]}
             error={errors.hero?.body}
           />
+
           <div className="grid lg:grid-cols-2 gap-6">
             <GeneralInput
               label="Button text"
@@ -476,11 +413,14 @@ export default function HungarianCoachingPageEditor() {
             placeholder="The Learning Experience"
             error={errors.paths?.eyebrow}
           />
-          <GeneralInput
+
+          <RichTextEditor
             label="Section heading"
+            editorKey="hungarian-coaching-paths-heading"
             value={s("paths").heading ?? ""}
-            onChange={(e) => updateSection("paths", { heading: e.target.value })}
+            onChange={(v) => updateSection("paths", { heading: v })}
             placeholder="Two Paths to Proficiency"
+            tools={["bold", "italic", "color", "fontWeight", "fontFamily"]}
             error={errors.paths?.heading}
           />
 
@@ -505,6 +445,10 @@ export default function HungarianCoachingPageEditor() {
                 <Plus size={16} /> Add path
               </button>
             </div>
+
+            {getBlocks<ImageBlock>("paths").length === 0 && (
+              <div className="p-4 text-[#3B5249]/55">No path cards added yet.</div>
+            )}
 
             <div className="space-y-4">
               {getBlocks<ImageBlock>("paths").map((block, i) => (
@@ -539,13 +483,16 @@ export default function HungarianCoachingPageEditor() {
 
                   <div className="grid lg:grid-cols-2 gap-6">
                     <div className="space-y-4">
-                      <GeneralInput
+                      <RichTextEditor
                         label="Card heading"
+                        editorKey={`paths-block-heading-${block.id}`}
                         value={block.heading ?? ""}
-                        onChange={(e) => updateBlock("paths", i, { heading: e.target.value })}
+                        onChange={(v) => updateBlock("paths", i, { heading: v })}
                         placeholder="Learn Hungarian - structured coaching"
+                        tools={["bold", "italic", "color", "fontWeight", "fontFamily"]}
                         error={errors.paths?.blocks?.[i]?.heading}
                       />
+
                       <RichTextEditor
                         label="Description"
                         editorKey={`paths-block-${block.id}`}
@@ -589,11 +536,14 @@ export default function HungarianCoachingPageEditor() {
             placeholder="Pricing & Investment"
             error={errors.pricing?.eyebrow}
           />
-          <GeneralInput
+
+          <RichTextEditor
             label="Section heading"
+            editorKey="hungarian-coaching-pricing-heading"
             value={s("pricing").heading ?? ""}
-            onChange={(e) => updateSection("pricing", { heading: e.target.value })}
+            onChange={(v) => updateSection("pricing", { heading: v })}
             placeholder="Conversation Bundles"
+            tools={["bold", "italic", "color"]}
             error={errors.pricing?.heading}
           />
 
@@ -609,11 +559,12 @@ export default function HungarianCoachingPageEditor() {
                   addBlock("pricing", {
                     name: "",
                     sessionsLabel: "",
-                    price: "",
+                    priceHUF: "",
+                    priceEUR: "",
                     validity: "",
                     buttonText: "",
                     buttonLink: "",
-                    badge: "",
+                    mostPopular: false,
                   })
                 }
                 className="text-[#7B6E9E] text-sm flex items-center gap-1 hover:underline"
@@ -621,6 +572,10 @@ export default function HungarianCoachingPageEditor() {
                 <Plus size={16} /> Add package
               </button>
             </div>
+
+            {getBlocks<PricingBlock>("pricing").length === 0 && (
+              <div className="p-4 text-[#3B5249]/55">No packages added yet.</div>
+            )}
 
             <div className="space-y-4">
               {getBlocks<PricingBlock>("pricing").map((block, i) => (
@@ -672,11 +627,18 @@ export default function HungarianCoachingPageEditor() {
                         error={errors.pricing?.blocks?.[i]?.sessionsLabel}
                       />
                       <GeneralInput
-                        label="Price"
-                        value={block.price ?? ""}
-                        onChange={(e) => updateBlock("pricing", i, { price: e.target.value })}
+                        label="Price in EUR"
+                        value={block.priceEUR ?? ""}
+                        onChange={(e) => updateBlock("pricing", i, { priceEUR: e.target.value })}
                         placeholder="€105"
-                        error={errors.pricing?.blocks?.[i]?.price}
+                        error={errors.pricing?.blocks?.[i]?.priceEUR}
+                      />
+                      <GeneralInput
+                        label="Price in HUF"
+                        value={block.priceHUF ?? ""}
+                        onChange={(e) => updateBlock("pricing", i, { priceHUF: e.target.value })}
+                        placeholder="35 000 Ft"
+                        error={errors.pricing?.blocks?.[i]?.priceHUF}
                       />
                       <GeneralInput
                         label="Validity text"
@@ -702,163 +664,91 @@ export default function HungarianCoachingPageEditor() {
                         placeholder="/contact"
                         error={errors.pricing?.blocks?.[i]?.buttonLink}
                       />
-                      <GeneralInput
-                        label="Badge"
-                        value={block.badge ?? ""}
-                        onChange={(e) => updateBlock("pricing", i, { badge: e.target.value })}
-                        placeholder="Most Popular"
-                        error={errors.pricing?.blocks?.[i]?.badge}
-                      />
+                      <label className="flex items-center w-fit gap-2 px-2 py-1 rounded-md border border-[#D4B483]/25 bg-white">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(block.mostPopular)}
+                          onChange={(e) =>
+                            updateBlock("pricing", i, { mostPopular: e.target.checked })
+                          }
+                          className="h-4 w-4 text-[#7B6E9E] border-[#D4B483]/35 rounded focus:ring-[#7B6E9E]/30"
+                        />
+                        <span className="text-xs text-[#3B5249]/80 whitespace-nowrap">
+                          Most Popular
+                        </span>
+                      </label>
+                      {getBlocks<PricingBlock>("pricing")[i].mostPopular && (
+                        <GeneralInput 
+                          label="Most Popular Badge Text"
+                          placeholder="Most Popular "
+                          value={block.mostPopularBadgeText ?? ''}
+                          onChange={(e) => updateBlock("pricing", i, { mostPopularBadgeText: e.target.value })}
+                          type="text"
+                          error={errors.pricing?.blocks?.[i]?.mostPopularBadgeText}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-
-          <div className="grid lg:grid-cols-2 gap-6">
-            <GeneralInput
-              label="Footer text"
-              value={s("pricing").footerText ?? ""}
-              onChange={(e) => updateSection("pricing", { footerText: e.target.value })}
-              placeholder="Ready to get started? Send me a message..."
-              error={errors.pricing?.footerText}
-            />
-            <GeneralInput
-              label="Footer link text"
-              value={s("pricing").footerLinkText ?? ""}
-              onChange={(e) => updateSection("pricing", { footerLinkText: e.target.value })}
-              placeholder="Get in touch"
-              error={errors.pricing?.footerLinkText}
-            />
-          </div>
-
-          <GeneralInput
-            label="Footer link href"
-            value={s("pricing").footerLinkHref ?? ""}
-            onChange={(e) => updateSection("pricing", { footerLinkHref: e.target.value })}
-            placeholder="/contact"
-            error={errors.pricing?.footerLinkHref}
-          />
         </div>
       )}
 
       {activeSection === "inline_cta" && (
         <div className="space-y-6" data-admin-section-key="inline_cta">
-          <GeneralInput
-            label="Text"
-            value={s("inline_cta").text ?? ""}
-            onChange={(e) => updateSection("inline_cta", { text: e.target.value })}
+          <RichTextEditor
+            label="Heading"
+            editorKey="hungarian-coaching-inline-cta-heading"
+            value={s("inline_cta").heading ?? ""}
+            onChange={(v) => updateSection("inline_cta", { heading: v })}
             placeholder="Ready to get started?"
-            error={errors.inline_cta?.text}
+            tools={["bold", "italic", "color"]}
+            error={errors.inline_cta?.heading}
           />
-          <div className="grid lg:grid-cols-2 gap-6">
-            <GeneralInput
-              label="Link text"
-              value={s("inline_cta").linkText ?? ""}
-              onChange={(e) => updateSection("inline_cta", { linkText: e.target.value })}
-              placeholder="Send me a message"
-              error={errors.inline_cta?.linkText}
-            />
-            <GeneralInput
-              label="Link href"
-              value={s("inline_cta").linkHref ?? ""}
-              onChange={(e) => updateSection("inline_cta", { linkHref: e.target.value })}
-              placeholder="/contact"
-              error={errors.inline_cta?.linkHref}
-            />
-          </div>
+
+          <RichTextEditor
+            label="Subheading"
+            editorKey="hungarian-coaching-inline-cta-subheading"
+            value={s("inline_cta").subheading ?? ""}
+            onChange={(v) => updateSection("inline_cta", { subheading: v })}
+            placeholder="Send me a message and we'll sort out availability and next steps."
+            tools={["bold", "italic", "link", "color"]}
+            error={errors.inline_cta?.subheading}
+          />
         </div>
       )}
 
       {activeSection === "testimonials" && (
         <div className="space-y-6" data-admin-section-key="testimonials">
-          <GeneralInput
+          <RichTextEditor
             label="Eyebrow"
+            editorKey="hungarian-coaching-testimonials-eyebrow"
             value={s("testimonials").eyebrow ?? ""}
-            onChange={(e) => updateSection("testimonials", { eyebrow: e.target.value })}
+            onChange={(v) => updateSection("testimonials", { eyebrow: v })}
             placeholder="What clients say"
+            tools={["bold", "italic", "color"]}
             error={errors.testimonials?.eyebrow}
           />
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium">Testimonials</h3>
-                <p className="text-xs text-[#3B5249]/55">Drag to reorder</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => addBlock("testimonials", { quote: "", author: "" })}
-                className="text-[#7B6E9E] text-sm flex items-center gap-1 hover:underline"
-              >
-                <Plus size={16} /> Add testimonial
-              </button>
+          {sharedContentNavigatorMap[activeSection] && (
+            <div className="pt-4">
+              <SharedContentNavigator href={sharedContentNavigatorMap[activeSection].href} navLabel={sharedContentNavigatorMap[activeSection].navLabel} textBeforNav={sharedContentNavigatorMap[activeSection].textBeforNav} />
             </div>
-
-            <div className="space-y-4">
-              {getBlocks<TestimonialBlock>("testimonials").map((block, i) => (
-                <div
-                  key={block.id}
-                  draggable
-                  onDragStart={() => setDragIndex(i)}
-                  onDragEnd={() => setDragIndex(null)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => {
-                    if (dragIndex === null) return;
-                    moveBlock("testimonials", dragIndex, i);
-                    setDragIndex(null);
-                  }}
-                  className={`border border-[#D4B483]/20 rounded-xl p-4 bg-white ${dragIndex === i ? "ring-2 ring-[#7B6E9E]/40" : ""}`}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                      <span className="text-[#3B5249]/45 cursor-grab select-none">
-                        <GripVertical size={18} />
-                      </span>
-                      Testimonial {i + 1}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeBlock("testimonials", i)}
-                      className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded flex items-center gap-1"
-                    >
-                      <Trash2 size={14} /> Remove
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    <RichTextEditor
-                      label="Quote"
-                      editorKey={`testimonial-${block.id}`}
-                      value={block.quote ?? ""}
-                      onChange={(v) => updateBlock("testimonials", i, { quote: v })}
-                      placeholder="I've had many English teachers..."
-                      tools={["bold", "italic", "link", "color"]}
-                      error={errors.testimonials?.blocks?.[i]?.quote}
-                    />
-                    <GeneralInput
-                      label="Author"
-                      value={block.author ?? ""}
-                      onChange={(e) => updateBlock("testimonials", i, { author: e.target.value })}
-                      placeholder="Tom"
-                      error={errors.testimonials?.blocks?.[i]?.author}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
       )}
 
       {activeSection === "faq" && (
         <div className="space-y-6" data-admin-section-key="faq">
-          <GeneralInput
+          <RichTextEditor
             label="Section heading"
+            editorKey="hungarian-coaching-faq-heading"
             value={s("faq").heading ?? ""}
-            onChange={(e) => updateSection("faq", { heading: e.target.value })}
+            onChange={(v) => updateSection("faq", { heading: v })}
             placeholder="Common Questions"
+            tools={["bold", "italic", "color"]}
             error={errors.faq?.heading}
           />
 
@@ -876,7 +766,9 @@ export default function HungarianCoachingPageEditor() {
                 <Plus size={16} /> Add FAQ
               </button>
             </div>
-
+            {getBlocks<FaqBlock>("faq").length === 0 && (
+              <div className="p-4 text-[#3B5249]/55">No FAQ items added yet.</div>
+            )}
             <div className="space-y-4">
               {getBlocks<FaqBlock>("faq").map((block, i) => (
                 <div
@@ -909,16 +801,19 @@ export default function HungarianCoachingPageEditor() {
                   </div>
 
                   <div className="space-y-4">
-                    <GeneralInput
+                    <RichTextEditor
                       label="Question"
+                      editorKey={`faq-question-${block.id}`}
                       value={block.question ?? ""}
-                      onChange={(e) => updateBlock("faq", i, { question: e.target.value })}
+                      onChange={(v) => updateBlock("faq", i, { question: v })}
                       placeholder="How long are sessions?"
+                      tools={["bold", "italic", "color"]}
                       error={errors.faq?.blocks?.[i]?.question}
                     />
+
                     <RichTextEditor
                       label="Answer"
-                      editorKey={`faq-${block.id}`}
+                      editorKey={`faq-answer-${block.id}`}
                       value={block.answer ?? ""}
                       onChange={(v) => updateBlock("faq", i, { answer: v })}
                       placeholder="Sessions are 45 minutes long..."

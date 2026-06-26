@@ -9,6 +9,7 @@ import {
   ArrowRight,
   MessageSquare,
   Layout,
+  Star,
 } from "lucide-react";
 import { useAdminLanguage } from "@/components/admin/language/AdminLanguageProvider";
 
@@ -16,6 +17,9 @@ export default function SharedContentPage() {
   const { language } = useAdminLanguage();
 
   const services = useQuery(api.admin.getServicesAdmin, {
+    lang: language ?? undefined,
+  });
+  const testimonials = useQuery(api.admin.getTestimonialsAdmin, {
     lang: language ?? undefined,
   });
   const values = useQuery(api.admin.getValuesAdmin, {
@@ -31,6 +35,15 @@ export default function SharedContentPage() {
       count: services?.length ?? 0,
       color: "bg-[#7B6E9E]/10",
       usedOn: ["Home", "Services"],
+    },
+    {
+      title: "Testimonials",
+      description: "Student reviews that appear on Home and About pages",
+      icon: Star,
+      href: "/admin/shared/testimonials",
+      count: testimonials?.length ?? 0,
+      color: "bg-[#7B6E9E]/10",
+      usedOn: ["Home", "Hungarian coaching"],
     },
     {
       title: "Values",
