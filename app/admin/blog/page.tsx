@@ -16,6 +16,7 @@ import {
   ExternalLink,
   FileText,
   GripVertical,
+  Star,
 } from "lucide-react";
 
 type BlogPost = {
@@ -29,6 +30,7 @@ type BlogPost = {
   readTime: string;
   content: string;
   published: boolean;
+  featured?: boolean;
   order: number;
 };
 
@@ -266,6 +268,12 @@ export default function BlogPostsAdminPage() {
                     <h3 className="font-semibold text-[#3B5249] truncate">
                       {post.title}
                     </h3>
+                    {post.featured && (
+                      <span className="inline-flex items-center gap-1 text-xs bg-[#7B6E9E]/15 text-[#7B6E9E] px-2 py-0.5 rounded">
+                        <Star size={11} fill="currentColor" />
+                        Featured
+                      </span>
+                    )}
                     {!post.published && (
                       <span className="text-xs bg-[#D4B483]/20 text-[#68582E] px-2 py-0.5 rounded">
                         Draft

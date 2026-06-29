@@ -35,6 +35,7 @@ export default function EditBlogPostPage() {
       readTime: post.readTime,
       content: post.content,
       published: post.published,
+      featured: (post as any).featured ?? false,
     };
   }, [post]);
 
@@ -83,6 +84,7 @@ export default function EditBlogPostPage() {
           readTime: values.readTime,
           content: values.content,
           published: publish,
+          featured: values.featured,
         });
         router.push("/admin/blog");
       }}

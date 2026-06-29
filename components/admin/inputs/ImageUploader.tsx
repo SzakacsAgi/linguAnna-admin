@@ -13,13 +13,14 @@ type ImageUploaderProps = {
   alt?: string;
   blurDataUrl?: string;
   onImageChange: (storageId?: Id<"_storage">) => void;
-  onAltChange: (alt: string) => void;
+  onAltChange?: (alt: string) => void;
   onBlurDataUrlChange?: (blurDataUrl?: string) => void;
   accept?: string;
   previewSize?: number;
   helpText?: string;
   error?: string;
   altError?: string;
+  hideAlt?: boolean;
 };
 
 async function generateBlurDataUrlFromFile(
@@ -92,6 +93,7 @@ export default function ImageUploader({
   helpText,
   error,
   altError,
+  hideAlt,
 }: ImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -138,7 +140,7 @@ export default function ImageUploader({
 
   const handleRemove = () => {
     onImageChange(undefined);
-    onAltChange(""); // alt törlés is
+    onAltChange?.(""); // alt törlés is
     if (onBlurDataUrlChange) {
       onBlurDataUrlChange(undefined);
     }
@@ -190,7 +192,7 @@ export default function ImageUploader({
             </div>
           </div>
 
-          {/* Alt text – only if image exists */}
+          {/* Alt text – always shown when image exists */}
           <div>
             <label
               className={`block text-xs font-medium mb-1 ${hasAltError ? "text-red-600" : "text-[#3B5249]/70"
@@ -201,7 +203,7 @@ export default function ImageUploader({
             <input
               type="text"
               value={alt}
-              onChange={(e) => onAltChange(e.target.value)}
+              onChange={(e) => onAltChange?.(e.target.value)}
               placeholder="Describe the image…"
               aria-invalid={hasAltError}
               className={`w-full px-3 py-2 border rounded-lg

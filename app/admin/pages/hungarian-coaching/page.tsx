@@ -26,6 +26,8 @@ type ImageBlock = {
   imageStorageId?: Id<"_storage">;
   imageAlt?: string;
   imageBlurDataUrl?: string;
+  iconStorageId?: Id<"_storage">;
+  iconAlt?: string;
 };
 
 type PricingBlock = {
@@ -197,6 +199,7 @@ export default function HungarianCoachingPageEditor() {
       if (requiredError(b.body, true)) e.body = requiredError(b.body, true);
       if (requiredError(b.imageStorageId)) e.imageStorageId = requiredError(b.imageStorageId);
       if (requiredError(b.imageAlt)) e.imageAlt = requiredError(b.imageAlt);
+      if (requiredError(b.iconStorageId)) e.iconStorageId = requiredError(b.iconStorageId);
       return e;
     });
     if (pathBlockErrs.some((e) => Object.keys(e).length)) pathsErrs.blocks = pathBlockErrs;
@@ -438,6 +441,7 @@ export default function HungarianCoachingPageEditor() {
                     body: "",
                     imageStorageId: undefined,
                     imageAlt: "",
+                    iconStorageId: undefined,
                   })
                 }
                 className="text-[#7B6E9E] text-sm flex items-center gap-1 hover:underline"
@@ -504,7 +508,16 @@ export default function HungarianCoachingPageEditor() {
                       />
                     </div>
 
-                    <div>
+                    <div className="space-y-4">
+                      <ImageUploader
+                        label="Icon"
+                        storageId={block.iconStorageId}
+                        alt={block.iconAlt ?? ""}
+                        onImageChange={(id) => updateBlock("paths", i, { iconStorageId: id })}
+                        onAltChange={(v) => updateBlock("paths", i, { iconAlt: v })}
+                        previewSize={80}
+                        error={errors.paths?.blocks?.[i]?.iconStorageId}
+                      />
                       <ImageUploader
                         label="Card image"
                         storageId={block.imageStorageId}
@@ -678,7 +691,7 @@ export default function HungarianCoachingPageEditor() {
                         </span>
                       </label>
                       {getBlocks<PricingBlock>("pricing")[i].mostPopular && (
-                        <GeneralInput 
+                        <GeneralInput
                           label="Most Popular Badge Text"
                           placeholder="Most Popular "
                           value={block.mostPopularBadgeText ?? ''}

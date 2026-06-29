@@ -17,67 +17,60 @@ export default function PagesAdminPage() {
   const pages = [
     {
       title: "Home",
-      description:
-        "Hero section, credentials, values, services preview, testimonials, and contact form",
       icon: Home,
       href: "/admin/pages/home",
       sections: [
-        "Intoduction",
-        "Credentials",
-        "Values",
-        "Services",
-        "Testimonials",
-        "Contact Form",
+        "Hero",
+        "Struggles",
+        "Quote",
+        "Approach",
+        "Introduction",
+        "Testimonials title",
+        "Programs title",
+        "CTA",
       ],
     },
     {
       title: "About",
-      description: "Your story, qualifications, values, and testimonials",
       icon: User,
       href: "/admin/pages/about",
-      sections: ["Hero", "Story Sections", "Values", "Testimonials", "CTA"],
-    },
-    {
-      title: "Services",
-      description: "Service overview and detailed descriptions",
-      icon: BookOpen,
-      href: "/admin/pages/services",
-      sections: ["Hero", "CTA", "Others"],
+      sections: ["Hero", "My journey", "Credentials", "Why coaching", "Who I work with", "Glimpse", "CTA"],
     },
     {
       title: "Hungarian Coaching",
-      description: "Step-by-step guide for new students",
       icon: HelpCircle,
       href: "/admin/pages/hungarian-coaching",
-      sections: ["Hero", "Steps", "CTA"],
+      sections: ["Hero", "Paths", "Pricing", "Inline CTA", "Testimonials title", "FAQ", "Bottom CTA"],
+    },
+    {
+      title: "English Coaching",
+      icon: BookOpen,
+      href: "/admin/pages/english-coaching",
+      sections: ["Hero", "Focus", "Inline CTA", "Testimonials title", "FAQ", "Bottom CTA"],
     },
     {
       title: "Contact",
-      description: "Contact page hero section",
       icon: Mail,
       href: "/admin/pages/contact",
-      sections: ["Hero"],
+      sections: ["Hero", "Contact info"],
     },
     {
       title: "Blog",
-      description: "Edit the Blog page (hero, categories, CTA)",
       icon: PenTool,
       href: "/admin/pages/blog",
       sections: ["Hero", "Categories", "CTA"],
     },
     {
       title: "Article",
-      description: "Edit the blog article page (banner + CTA)",
       icon: FileText,
       href: "/admin/pages/article",
       sections: ["Banner", "CTA"],
     },
     {
       title: "Not found",
-      description: "Edit the 404 page (CTA + explore links)",
       icon: TriangleAlert,
       href: "/admin/pages/not-found",
-      sections: ["CTA", "Explore more", "Links"],
+      sections: ["CTA", "Links"],
     },
   ];
 
@@ -123,7 +116,7 @@ export default function PagesAdminPage() {
                     />
                   </div>
                   <p className="text-[#3B5249]/65 text-sm mt-1">
-                    {page.description}
+                    You can edit the following sections:
                   </p>
                   <div className="flex flex-wrap gap-2 mt-4">
                     {page.sections?.map((section) => (

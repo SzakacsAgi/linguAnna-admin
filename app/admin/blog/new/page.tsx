@@ -31,6 +31,7 @@ export default function NewBlogPostPage() {
       readTime: "",
       content: "",
       published: false,
+      featured: false,
     }),
     [],
   );
@@ -55,6 +56,7 @@ export default function NewBlogPostPage() {
           readTime: values.readTime,
           content: values.content,
           published: publish,
+          featured: values.featured,
         });
         router.push("/admin/blog");
       }}

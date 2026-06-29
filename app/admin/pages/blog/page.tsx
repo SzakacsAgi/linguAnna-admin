@@ -21,6 +21,8 @@ import { useAdminLanguage } from "@/components/admin/language/AdminLanguageProvi
 
 type SectionContent = {
   heading?: string;
+  eyebrow?: string;
+  subheading?: string;
   paragraphs?: string[];
   body?: string;
   buttonText?: string;
@@ -31,6 +33,8 @@ type SectionContent = {
   servicesButtonLink?: string;
   blogCardReadMoreButtonText?: string;
   allPostsText?: string;
+  placeholder?: string;
+  footnote?: string;
 };
 
 type BlogCategory = {
@@ -42,14 +46,21 @@ type BlogCategory = {
 };
 
 const sections = [
-  { key: "hero", label: "Hero" },
+  { key: "hero", label: "Header" },
+  { key: "featured", label: "Featured" },
+  { key: "recent", label: "Recent Musings" },
+  { key: "newsletter", label: "Newsletter" },
   { key: "categories", label: "Categories" },
-  { key: "others", label: "Others" },
   { key: "no_posts", label: "No Posts" },
-  { key: "cta", label: "CTA" },
 ];
 
-type SectionKey = "hero" | "categories" | "others" | "no_posts" | "cta";
+type SectionKey =
+  | "hero"
+  | "featured"
+  | "recent"
+  | "newsletter"
+  | "categories"
+  | "no_posts";
 
 export default function BlogPageEditor() {
   const searchParams = useSearchParams();
@@ -128,7 +139,9 @@ export default function BlogPageEditor() {
 
     // No defaults: if a section doesn't exist in the DB yet, keep it empty.
     map.no_posts = map.no_posts ?? {};
-    map.others = map.others ?? {};
+    map.featured = map.featured ?? {};
+    map.recent = map.recent ?? {};
+    map.newsletter = map.newsletter ?? {};
 
     setFormData(map);
   }, [pageContent]);
@@ -178,20 +191,28 @@ export default function BlogPageEditor() {
 
   const computeValidationErrors = () => {
     const hero = formData.hero ?? {};
-    const cta = formData.cta ?? {};
+    const featured = formData.featured ?? {};
+    const recent = formData.recent ?? {};
+    const newsletter = formData.newsletter ?? {};
     const noPosts = formData.no_posts ?? {};
-    const others = formData.others ?? {};
 
     const next: Record<string, Partial<Record<keyof SectionContent, any>>> = {
       hero: {
         heading: requiredError(hero.heading),
         paragraphs: [requiredError((hero.paragraphs || [""])[0], true)],
       },
-      others: {
-        blogCardReadMoreButtonText: requiredError(
-          others.blogCardReadMoreButtonText,
-        ),
-        allPostsText: requiredError(others.allPostsText),
+      featured: {
+        eyebrow: requiredError(featured.eyebrow),
+        buttonText: requiredError(featured.buttonText),
+      },
+      recent: {
+        heading: requiredError(recent.heading),
+      },
+      newsletter: {
+        heading: requiredError(newsletter.heading),
+        body: requiredError(newsletter.body),
+        placeholder: requiredError(newsletter.placeholder),
+        buttonText: requiredError(newsletter.buttonText),
       },
       no_posts: {
         heading: requiredError(noPosts.heading),
@@ -203,12 +224,6 @@ export default function BlogPageEditor() {
         getInTouchButtonLink: requiredError(noPosts.getInTouchButtonLink),
         servicesButtonText: requiredError(noPosts.servicesButtonText),
         servicesButtonLink: requiredError(noPosts.servicesButtonLink),
-      },
-      cta: {
-        heading: requiredError(cta.heading),
-        body: requiredError(cta.body || (cta.paragraphs || [""])[0], true),
-        buttonText: requiredError(cta.buttonText),
-        buttonLink: requiredError(cta.buttonLink),
       },
     };
 
@@ -292,7 +307,13 @@ export default function BlogPageEditor() {
 
     setSaving(true);
     try {
-      for (const sectionKey of ["hero", "others", "no_posts", "cta"]) {
+      for (const sectionKey of [
+        "hero",
+        "featured",
+        "recent",
+        "newsletter",
+        "no_posts",
+      ]) {
         const content = formData[sectionKey] ?? {};
         await upsertContent({
           pageSlug: "blog",
@@ -464,9 +485,10 @@ export default function BlogPageEditor() {
   }
 
   const hero = formData.hero || {};
-  const others = formData.others || {};
+  const featured = formData.featured || {};
+  const recent = formData.recent || {};
+  const newsletter = formData.newsletter || {};
   const noPosts = formData.no_posts || {};
-  const cta = formData.cta || {};
 
   return (
     <AdminPageLayout
@@ -661,30 +683,99 @@ export default function BlogPageEditor() {
           </div>
         )}
 
-        {activeSection === "others" && (
-          <div className="space-y-6" data-admin-section-key="others">
+        {activeSection === "featured" && (
+          <div className="space-y-6" data-admin-section-key="featured">
             <GeneralInput
-              label="Blog card read more button text"
-              placeholder='e.g. "Read more"'
-              value={others.blogCardReadMoreButtonText || ""}
+              label="Eyebrow label"
+              placeholder='e.g. "Featured Article"'
+              value={featured.eyebrow || ""}
               onChange={(e) =>
-                updateSection(
-                  "others",
-                  "blogCardReadMoreButtonText",
-                  e.target.value,
-                )
+                updateSection("featured", "eyebrow", e.target.value)
               }
-              error={(errors.others as any)?.blogCardReadMoreButtonText}
+              error={(errors.featured as any)?.eyebrow}
             />
             <GeneralInput
-              label="All post title"
-              placeholder='e.g. "All posts"'
-              value={others.allPostsText || ""}
+              label="Read more button text"
+              placeholder='e.g. "Read More"'
+              value={featured.buttonText || ""}
               onChange={(e) =>
-                updateSection("others", "allPostsText", e.target.value)
+                updateSection("featured", "buttonText", e.target.value)
               }
-              error={(errors.others as any)?.allPostsText}
+              error={(errors.featured as any)?.buttonText}
             />
+            <SharedContentNavigator
+              href="/admin/blog"
+              navLabel="Admin → Blog"
+              textBeforNav="Pick which post is featured (star toggle) in"
+            />
+          </div>
+        )}
+
+        {activeSection === "recent" && (
+          <div className="space-y-6" data-admin-section-key="recent">
+            <GeneralInput
+              label="Section heading"
+              placeholder='e.g. "Recent Musings"'
+              value={recent.heading || ""}
+              onChange={(e) =>
+                updateSection("recent", "heading", e.target.value)
+              }
+              error={(errors.recent as any)?.heading}
+            />
+          </div>
+        )}
+
+        {activeSection === "newsletter" && (
+          <div className="space-y-6" data-admin-section-key="newsletter">
+            <GeneralInput
+              label="Title"
+              placeholder='e.g. "Join the LinguAnna Circle"'
+              value={newsletter.heading || ""}
+              onChange={(e) =>
+                updateSection("newsletter", "heading", e.target.value)
+              }
+              error={(errors.newsletter as any)?.heading}
+            />
+            <GeneralInput
+              label="Description"
+              placeholder="Short text shown under the title"
+              value={newsletter.body || ""}
+              onChange={(e) =>
+                updateSection("newsletter", "body", e.target.value)
+              }
+              error={(errors.newsletter as any)?.body}
+            />
+            <GeneralInput
+              label="Email input placeholder"
+              placeholder='e.g. "Your email address"'
+              value={newsletter.placeholder || ""}
+              onChange={(e) =>
+                updateSection("newsletter", "placeholder", e.target.value)
+              }
+              error={(errors.newsletter as any)?.placeholder}
+            />
+            <GeneralInput
+              label="Subscribe button text"
+              placeholder='e.g. "Subscribe"'
+              value={newsletter.buttonText || ""}
+              onChange={(e) =>
+                updateSection("newsletter", "buttonText", e.target.value)
+              }
+              error={(errors.newsletter as any)?.buttonText}
+            />
+            <GeneralInput
+              label="Footnote"
+              placeholder='e.g. "No spam, only deep insights twice a month."'
+              value={newsletter.footnote || ""}
+              onChange={(e) =>
+                updateSection("newsletter", "footnote", e.target.value)
+              }
+              error={(errors.newsletter as any)?.footnote}
+            />
+            <p className="text-xs text-[#3B5249]/55">
+              The signup form is presentational for now — it does not collect
+              email addresses yet.
+            </p>
           </div>
         )}
 
@@ -736,39 +827,6 @@ export default function BlogPageEditor() {
                   linkPlaceholder: "/services",
                   textError: (errors.no_posts as any)?.servicesButtonText,
                   linkError: (errors.no_posts as any)?.servicesButtonLink,
-                },
-              ]}
-            />
-          </div>
-        )}
-
-        {activeSection === "cta" && (
-          <div data-admin-section-key="cta">
-            <CTA
-              title={cta.heading || ""}
-              onTitleChange={(value) => updateSection("cta", "heading", value)}
-              titleError={(errors.cta as any)?.heading}
-              description={cta.body || (cta.paragraphs || [""])[0] || ""}
-              onDescriptionChange={(value) =>
-                updateSection("cta", "body", value)
-              }
-              editorKey="blog-cta-description"
-              tools={["bold", "italic", "link"]}
-              descriptionError={(errors.cta as any)?.body}
-              buttons={[
-                {
-                  text: cta.buttonText,
-                  link: cta.buttonLink,
-                  onTextChange: (value) =>
-                    updateSection("cta", "buttonText", value),
-                  onLinkChange: (value) =>
-                    updateSection("cta", "buttonLink", value),
-                  textLabel: "Button text",
-                  linkLabel: "Button link",
-                  textPlaceholder: "e.g. Contact me",
-                  linkPlaceholder: "/contact",
-                  textError: (errors.cta as any)?.buttonText,
-                  linkError: (errors.cta as any)?.buttonLink,
                 },
               ]}
             />

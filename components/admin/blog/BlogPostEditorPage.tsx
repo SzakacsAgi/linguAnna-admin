@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Clock, Eye, FileText, Save } from "lucide-react";
+import { ArrowLeft, Clock, Eye, FileText, Save, Star } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/lib/convexApi";
 import { Id } from "@/convex/_generated/dataModel";
@@ -41,6 +41,7 @@ export type BlogPostEditorValues = {
   readTime: string;
   content: string; // HTML
   published: boolean;
+  featured: boolean;
 };
 
 type BlogPostEditorPageProps = {
@@ -81,7 +82,8 @@ function valuesEqual(a: BlogPostEditorValues, b: BlogPostEditorValues) {
     a.date === b.date &&
     a.readTime === b.readTime &&
     a.content === b.content &&
-    a.published === b.published
+    a.published === b.published &&
+    a.featured === b.featured
   );
 }
 
@@ -422,6 +424,53 @@ export default function BlogPostEditorPage({
                   .
                 </p>
               )}
+            </div>
+
+            {/* Featured */}
+            <div className="bg-white rounded-2xl border border-[#D4B483]/20 shadow-sm p-6">
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    featured: !prev.featured,
+                  }))
+                }
+                aria-pressed={formData.featured}
+                className="w-full flex items-center justify-between gap-4 text-left"
+              >
+                <span className="flex items-start gap-3">
+                  <span
+                    className={`mt-0.5 flex-shrink-0 p-2 rounded-lg border transition-colors ${formData.featured
+                        ? "bg-[#D4B483]/20 border-[#D4B483]/40 text-[#68582E]"
+                        : "bg-[#FAF6F0] border-[#D4B483]/20 text-[#3B5249]/40"
+                      }`}
+                  >
+                    <Star
+                      size={18}
+                      fill={formData.featured ? "currentColor" : "none"}
+                    />
+                  </span>
+                  <span>
+                    <span className="block text-sm font-medium text-[#3B5249]/85">
+                      Featured article
+                    </span>
+                    <span className="block text-xs text-[#3B5249]/55 mt-1">
+                      Shown in the highlighted block at the top of the blog
+                      page. Only one post per language can be featured.
+                    </span>
+                  </span>
+                </span>
+                <span
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${formData.featured ? "bg-[#3B5249]" : "bg-[#D4B483]/35"
+                    }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${formData.featured ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                  />
+                </span>
+              </button>
             </div>
 
             {/* Featured Image */}

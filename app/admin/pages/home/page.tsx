@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/lib/convexApi";
-import { Plus, Trash2} from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import RichTextEditor from "@/components/admin/inputs/RichTextEditor";
@@ -150,6 +150,9 @@ export default function HomePageEditor() {
         if (section.key === "hero" || section.key === "approach") {
           sectionErrors.buttonText = requiredError(data.buttonText);
           sectionErrors.buttonLink = requiredError(data.buttonLink);
+        }
+        if (section.key === "coach_intro") {
+          sectionErrors.quote = requiredError(data.quote, true);
         }
         if (section.key === "hero" || section.key === "struggle" || section.key === "approach" || section.key === "coach_intro") {
           const paragraphs = (data.paragraphs ?? [""]) as string[];
@@ -311,9 +314,9 @@ export default function HomePageEditor() {
         <GeneralInput label="Eyebrow label" value={currentSection.subheading || ""} onChange={(e) => updateSection(activeSection, "subheading", e.target.value)} placeholder="Optional eyebrow" error={errors[activeSection]?.subheading} />
         <RichTextEditor label="Heading" editorKey={`${activeSection}-heading`} value={currentSection.heading || ""} onChange={(e) => updateSection(activeSection, "heading", e)} placeholder="Section heading..." tools={["bold", "italic", "color"]} error={errors[activeSection]?.heading} />
         <div className="space-y-4">
-          {activeSection === "approach" && <div className="space-y-2" >
+          {(activeSection === "approach" || activeSection === "coach_intro") && <div className="space-y-2" >
             <label className="text-sm font-medium text-[#3B5249]">Quote</label>
-            <RichTextEditor editorKey="approach-quote" value={currentSection.quote || ""} onChange={(e) => updateSection("approach", "quote", e)} placeholder="Approach..." tools={["bold", "italic", "color"]} error={errors.approach?.quote} />          </div>}
+            <RichTextEditor editorKey={`${activeSection}-quote`} value={currentSection.quote || ""} onChange={(e) => updateSection(activeSection, "quote", e)} placeholder="Quote..." tools={["bold", "italic", "color"]} error={errors[activeSection]?.quote} />          </div>}
           <div className="flex justify-between items-center mb-2">
             <label className="text-sm font-medium text-[#3B5249]">Paragraphs</label>
             <button onClick={addParagraph} className="text-[#7B6E9E] text-sm flex gap-1 hover:underline"><Plus size={16} /> Add paragraph</button>

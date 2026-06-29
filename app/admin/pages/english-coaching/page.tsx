@@ -1,0 +1,660 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { GripVertical, Plus, Trash2 } from "lucide-react";
+
+import { api } from "@/lib/convexApi";
+import { Id } from "@/convex/_generated/dataModel";
+
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
+import AdminPageLoader from "@/components/admin/AdminPageLoader";
+import CTA from "@/components/admin/CTA";
+import GeneralInput from "@/components/admin/inputs/GeneralInput";
+import ImageUploader from "@/components/admin/inputs/ImageUploader";
+import RichTextEditor from "@/components/admin/inputs/RichTextEditor";
+
+import { requiredError } from "@/lib/admin/required";
+import { useAdminSaveErrorPopup } from "@/hooks/useAdminSaveErrorPopup";
+import { useAdminLanguage } from "@/components/admin/language/AdminLanguageProvider";
+import SharedContentNavigator from "@/components/admin/SharedContentNavigator";
+
+type FocusBlock = {
+    id: string;
+    eyebrow?: string;
+    heading?: string;
+    body?: string;
+    imageStorageId?: Id<"_storage">;
+    imageAlt?: string;
+    imageBlurDataUrl?: string;
+};
+
+type FaqBlock = {
+    id: string;
+    question?: string;
+    answer?: string;
+};
+
+type SectionData = Record<string, any>;
+
+const sections = [
+    { key: "hero", label: "Hero" },
+    { key: "focus", label: "Focus" },
+    { key: "inline_cta", label: "Inline CTA" },
+    { key: "testimonials", label: "Testimonials" },
+    { key: "faq", label: "FAQ" },
+    { key: "bottom_cta", label: "Bottom CTA" },
+];
+
+export default function EnglishCoachingPageEditor() {
+    const { language } = useAdminLanguage();
+    const pageContent = useQuery(api.admin.getPageContentAdmin, {
+        pageSlug: "english-coaching",
+        lang: language ?? undefined,
+    });
+
+    const upsertContent = useMutation(api.admin.upsertPageContent);
+    const showSaveError = useAdminSaveErrorPopup();
+
+    const [activeSection, setActiveSection] = useState("hero");
+    const [formData, setFormData] = useState<Record<string, SectionData>>({});
+    const [saving, setSaving] = useState(false);
+    const [hasChanges, setHasChanges] = useState(false);
+    const [dragIndex, setDragIndex] = useState<number | null>(null);
+    const [errors, setErrors] = useState<Record<string, any>>({});
+    const pendingFocusSectionKeyRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!pageContent) return;
+
+        const map: Record<string, SectionData> = {};
+        for (const section of pageContent) {
+            map[section.sectionKey] = { ...section.content };
+        }
+
+        for (const s of sections) {
+            map[s.key] = map[s.key] ?? {};
+        }
+
+        if (!map.focus.blocks || map.focus.blocks.length === 0) {
+            map.focus = { ...map.focus, blocks: [] };
+        }
+
+        if (!map.faq.blocks || map.faq.blocks.length === 0) {
+            map.faq = { ...map.faq, blocks: [] };
+        }
+
+        setFormData(map);
+    }, [pageContent]);
+
+    const createId = () => {
+        const c = crypto as any;
+        return c?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    };
+
+    const updateSection = (sectionKey: string, patch: Partial<SectionData>) => {
+        setFormData((prev) => ({
+            ...prev,
+            [sectionKey]: { ...prev[sectionKey], ...patch },
+        }));
+
+        setErrors((prev) => {
+            const next = { ...prev };
+            if (next[sectionKey]) {
+                next[sectionKey] = { ...next[sectionKey] };
+                for (const k of Object.keys(patch)) delete next[sectionKey][k];
+            }
+            return next;
+        });
+
+        setHasChanges(true);
+    };
+
+    const getBlocks = <T,>(sectionKey: string): T[] =>
+        (formData[sectionKey]?.blocks ?? []) as T[];
+
+    const setBlocks = (sectionKey: string, blocks: any[]) =>
+        updateSection(sectionKey, { blocks });
+
+    const addBlock = (sectionKey: string, template: Record<string, any> = {}) =>
+        setBlocks(sectionKey, [...getBlocks(sectionKey), { id: createId(), ...template }]);
+
+    const removeBlock = (sectionKey: string, index: number) => {
+        const blocks = [...getBlocks(sectionKey)];
+        blocks.splice(index, 1);
+        setBlocks(sectionKey, blocks);
+    };
+
+    const updateBlock = (sectionKey: string, index: number, patch: Record<string, any>) => {
+        const blocks = [...getBlocks(sectionKey)];
+        blocks[index] = { ...blocks[index], ...patch };
+        setBlocks(sectionKey, blocks);
+
+        setErrors((prev) => {
+            const next = { ...prev };
+            if (next[sectionKey]?.blocks?.[index]) {
+                const blockErrors = [...(next[sectionKey].blocks ?? [])];
+                blockErrors[index] = { ...blockErrors[index] };
+                for (const k of Object.keys(patch)) delete blockErrors[index][k];
+                next[sectionKey] = { ...next[sectionKey], blocks: blockErrors };
+            }
+            return next;
+        });
+
+        setHasChanges(true);
+    };
+
+    const moveBlock = (sectionKey: string, from: number, to: number) => {
+        if (from === to) return;
+        const blocks = [...getBlocks(sectionKey)];
+        const [moved] = blocks.splice(from, 1);
+        blocks.splice(to, 0, moved);
+        setBlocks(sectionKey, blocks);
+    };
+
+    const computeErrors = (): Record<string, any> => {
+        const next: Record<string, any> = {};
+
+        // Hero validation
+        const hero = formData.hero ?? {};
+        const heroErrs: any = {};
+        if (requiredError(hero.eyebrow)) heroErrs.eyebrow = requiredError(hero.eyebrow);
+        if (requiredError(hero.heading, true)) heroErrs.heading = requiredError(hero.heading, true);
+        if (requiredError(hero.body, true)) heroErrs.body = requiredError(hero.body, true);
+        if (requiredError(hero.buttonText)) heroErrs.buttonText = requiredError(hero.buttonText);
+        if (requiredError(hero.buttonLink)) heroErrs.buttonLink = requiredError(hero.buttonLink);
+        if (Object.keys(heroErrs).length) next.hero = heroErrs;
+
+        // Focus validation
+        const focus = formData.focus ?? {};
+        const focusErrs: any = {};
+        if (requiredError(focus.heading, true)) focusErrs.heading = requiredError(focus.heading, true);
+
+        const focusBlocks = (focus.blocks ?? []) as FocusBlock[];
+        const focusBlockErrs = focusBlocks.map((b) => {
+            const e: any = {};
+            if (requiredError(b.eyebrow)) e.eyebrow = requiredError(b.eyebrow);
+            if (requiredError(b.heading, true)) e.heading = requiredError(b.heading, true);
+            if (requiredError(b.body, true)) e.body = requiredError(b.body, true);
+            if (requiredError(b.imageStorageId)) e.imageStorageId = requiredError(b.imageStorageId);
+            return e;
+        });
+        if (focusBlockErrs.some((e) => Object.keys(e).length)) focusErrs.blocks = focusBlockErrs;
+        if (Object.keys(focusErrs).length) next.focus = focusErrs;
+
+        // Inline CTA validation
+        const inlineCta = formData.inline_cta ?? {};
+        const inlineCtaErrs: any = {};
+        if (requiredError(inlineCta.heading, true)) {
+            inlineCtaErrs.heading = requiredError(inlineCta.heading, true);
+        }
+        if (requiredError(inlineCta.subheading, true)) {
+            inlineCtaErrs.subheading = requiredError(inlineCta.subheading, true);
+        }
+        if (Object.keys(inlineCtaErrs).length) next.inline_cta = inlineCtaErrs;
+
+        // Testimonials validation
+        const testimonials = formData.testimonials ?? {};
+        const testimonialsErrs: any = {};
+        if (requiredError(testimonials.eyebrow, true)) {
+            testimonialsErrs.eyebrow = requiredError(testimonials.eyebrow, true);
+        }
+        if (Object.keys(testimonialsErrs).length) next.testimonials = testimonialsErrs;
+
+        // FAQ validation
+        const faq = formData.faq ?? {};
+        const faqErrs: any = {};
+        if (requiredError(faq.heading, true)) faqErrs.heading = requiredError(faq.heading, true);
+
+        const faqBlocks = (faq.blocks ?? []) as FaqBlock[];
+        const faqBlockErrs = faqBlocks.map((b) => {
+            const e: any = {};
+            if (requiredError(b.question, true)) e.question = requiredError(b.question, true);
+            if (requiredError(b.answer, true)) e.answer = requiredError(b.answer, true);
+            return e;
+        });
+        if (faqBlockErrs.some((e) => Object.keys(e).length)) faqErrs.blocks = faqBlockErrs;
+        if (Object.keys(faqErrs).length) next.faq = faqErrs;
+
+        // Bottom CTA validation
+        const bottomCta = formData.bottom_cta ?? {};
+        const bottomCtaErrs: any = {};
+        if (requiredError(bottomCta.heading)) bottomCtaErrs.heading = requiredError(bottomCta.heading);
+        if (requiredError(bottomCta.body, true)) bottomCtaErrs.body = requiredError(bottomCta.body, true);
+        if (requiredError(bottomCta.getInTouchButtonText)) {
+            bottomCtaErrs.getInTouchButtonText = requiredError(bottomCta.getInTouchButtonText);
+        }
+        if (requiredError(bottomCta.getInTouchButtonLink)) {
+            bottomCtaErrs.getInTouchButtonLink = requiredError(bottomCta.getInTouchButtonLink);
+        }
+        if (Object.keys(bottomCtaErrs).length) next.bottom_cta = bottomCtaErrs;
+
+        setErrors(next);
+        return next;
+    };
+
+    const focusFirstInvalid = (sectionKey: string) => {
+        if (typeof document === "undefined") return;
+        const root = document.querySelector(`[data-admin-section-key="${sectionKey}"]`) as HTMLElement | null;
+        if (!root) return;
+
+        const target =
+            (root.querySelector('[aria-invalid="true"]') as HTMLElement | null) ??
+            (root.querySelector("input, textarea, [contenteditable='true']") as HTMLElement | null);
+
+        if (!target) return;
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        target.focus({ preventScroll: true });
+    };
+
+    useEffect(() => {
+        const pending = pendingFocusSectionKeyRef.current;
+        if (!pending || pending !== activeSection) return;
+        pendingFocusSectionKeyRef.current = null;
+        requestAnimationFrame(() => focusFirstInvalid(pending));
+    }, [activeSection, errors]);
+
+    const handleSave = async () => {
+        const nextErrors = computeErrors();
+        const errorKeys = Object.keys(nextErrors);
+
+        if (errorKeys.length > 0) {
+            const activeIndex = sections.findIndex((s) => s.key === activeSection);
+            let nextInvalidKey = activeSection;
+
+            if (!errorKeys.includes(activeSection)) {
+                for (let offset = 1; offset <= sections.length; offset++) {
+                    const candidate = sections[(activeIndex + offset) % sections.length]?.key;
+                    if (candidate && errorKeys.includes(candidate)) {
+                        nextInvalidKey = candidate;
+                        break;
+                    }
+                }
+            }
+
+            pendingFocusSectionKeyRef.current = nextInvalidKey;
+            if (nextInvalidKey !== activeSection) setActiveSection(nextInvalidKey);
+            return;
+        }
+
+        setSaving(true);
+        try {
+            for (const [sectionKey, content] of Object.entries(formData)) {
+                await upsertContent({
+                    pageSlug: "english-coaching",
+                    sectionKey,
+                    lang: language ?? undefined,
+                    content,
+                });
+            }
+            setHasChanges(false);
+        } catch (error) {
+            await showSaveError(error, { title: "Couldn't save English Coaching page" });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (pageContent === undefined) return <AdminPageLoader />;
+
+    const s = (key: string) => formData[key] ?? {};
+
+    const sharedContentNavigatorMap: Record<string, { href: string; navLabel: string; textBeforNav: string }> = {
+        testimonials: {
+            href: "/admin/shared/testimonials",
+            navLabel: "Shared Content → Testimonials",
+            textBeforNav: "Edit your testimonials in",
+        },
+    };
+
+    return (
+        <AdminPageLayout
+            pageTitle="Edit English Coaching Page"
+            breadcrumbLabel="English Coaching"
+            sections={sections}
+            activeSection={activeSection}
+            onSectionChange={setActiveSection}
+            onSave={handleSave}
+            saving={saving}
+            hasChanges={hasChanges}
+        >
+            {activeSection === "hero" && (
+                <div className="space-y-6" data-admin-section-key="hero">
+                    <GeneralInput
+                        label="Eyebrow"
+                        value={s("hero").eyebrow ?? ""}
+                        onChange={(e) => updateSection("hero", { eyebrow: e.target.value })}
+                        placeholder="LinguAnna Coaching"
+                        error={errors.hero?.eyebrow}
+                    />
+
+                    <RichTextEditor
+                        label="Main heading"
+                        editorKey="english-coaching-hero-heading"
+                        value={s("hero").heading ?? ""}
+                        onChange={(v) => updateSection("hero", { heading: v })}
+                        placeholder="Unlock your English potential..."
+                        tools={["bold", "italic", "color", "fontWeight"]}
+                        error={errors.hero?.heading}
+                    />
+
+                    <RichTextEditor
+                        label="Intro text"
+                        editorKey="english-coaching-hero-body"
+                        value={s("hero").body ?? ""}
+                        onChange={(v) => updateSection("hero", { body: v })}
+                        placeholder="Whether you want to advance your career..."
+                        tools={["bold", "italic", "link", "color"]}
+                        error={errors.hero?.body}
+                    />
+
+                    <div className="grid lg:grid-cols-2 gap-6">
+                        <GeneralInput
+                            label="Button text"
+                            value={s("hero").buttonText ?? ""}
+                            onChange={(e) => updateSection("hero", { buttonText: e.target.value })}
+                            placeholder="Book a free discovery call"
+                            error={errors.hero?.buttonText}
+                        />
+                        <GeneralInput
+                            label="Button link"
+                            value={s("hero").buttonLink ?? ""}
+                            onChange={(e) => updateSection("hero", { buttonLink: e.target.value })}
+                            placeholder="/contact"
+                            error={errors.hero?.buttonLink}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {activeSection === "focus" && (
+                <div className="space-y-6" data-admin-section-key="focus">
+                    <RichTextEditor
+                        label="Section heading"
+                        editorKey="english-coaching-focus-heading"
+                        value={s("focus").heading ?? ""}
+                        onChange={(v) => updateSection("focus", { heading: v })}
+                        placeholder="What We Focus On"
+                        tools={["bold", "italic", "color", "fontWeight", "fontFamily"]}
+                        error={errors.focus?.heading}
+                    />
+
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-medium">Focuses</h3>
+                                <p className="text-xs text-[#3B5249]/55">Drag to reorder</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    addBlock("focus", {
+                                        eyebrow: "",
+                                        heading: "",
+                                        body: "",
+                                        imageStorageId: undefined,
+                                        imageAlt: "",
+                                    })
+                                }
+                                className="text-[#7B6E9E] text-sm flex items-center gap-1 hover:underline"
+                            >
+                                <Plus size={16} /> Add focus
+                            </button>
+                        </div>
+
+                        {getBlocks<FocusBlock>("focus").length === 0 && (
+                            <div className="p-4 text-[#3B5249]/55">No focus items added yet.</div>
+                        )}
+
+                        <div className="space-y-4">
+                            {getBlocks<FocusBlock>("focus").map((block, i) => (
+                                <div
+                                    key={block.id}
+                                    draggable
+                                    onDragStart={() => setDragIndex(i)}
+                                    onDragEnd={() => setDragIndex(null)}
+                                    onDragOver={(e) => e.preventDefault()}
+                                    onDrop={() => {
+                                        if (dragIndex === null) return;
+                                        moveBlock("focus", dragIndex, i);
+                                        setDragIndex(null);
+                                    }}
+                                    className={`border border-[#D4B483]/20 rounded-xl p-4 bg-white ${dragIndex === i ? "ring-2 ring-[#7B6E9E]/40" : ""}`}
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-2 text-sm font-medium">
+                                            <span className="text-[#3B5249]/45 cursor-grab select-none">
+                                                <GripVertical size={18} />
+                                            </span>
+                                            Focus {i + 1}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeBlock("focus", i)}
+                                            className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded flex items-center gap-1"
+                                        >
+                                            <Trash2 size={14} /> Remove
+                                        </button>
+                                    </div>
+
+                                    <div className="grid lg:grid-cols-2 gap-6">
+                                        <div className="space-y-4">
+                                            <GeneralInput
+                                                label="Eyebrow"
+                                                value={block.eyebrow ?? ""}
+                                                onChange={(e) => updateBlock("focus", i, { eyebrow: e.target.value })}
+                                                placeholder="Communication"
+                                                error={errors.focus?.blocks?.[i]?.eyebrow}
+                                            />
+
+                                            <RichTextEditor
+                                                label="Title"
+                                                editorKey={`focus-block-heading-${block.id}`}
+                                                value={block.heading ?? ""}
+                                                onChange={(v) => updateBlock("focus", i, { heading: v })}
+                                                placeholder="Speak with confidence"
+                                                tools={["bold", "italic", "color", "fontWeight", "fontFamily"]}
+                                                error={errors.focus?.blocks?.[i]?.heading}
+                                            />
+
+                                            <RichTextEditor
+                                                label="Description"
+                                                editorKey={`focus-block-body-${block.id}`}
+                                                value={block.body ?? ""}
+                                                onChange={(v) => updateBlock("focus", i, { body: v })}
+                                                placeholder="Build fluency and accuracy in everyday and professional situations..."
+                                                tools={["bold", "italic", "link", "color"]}
+                                                error={errors.focus?.blocks?.[i]?.body}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <ImageUploader
+                                                label="Image"
+                                                storageId={block.imageStorageId}
+                                                alt={block.imageAlt ?? ""}
+                                                onImageChange={(id) => updateBlock("focus", i, { imageStorageId: id })}
+                                                onBlurDataUrlChange={(blur) =>
+                                                    updateBlock("focus", i, { imageBlurDataUrl: blur })
+                                                }
+                                                onAltChange={(v) => updateBlock("focus", i, { imageAlt: v })}
+                                                previewSize={240}
+                                                error={errors.focus?.blocks?.[i]?.imageStorageId}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeSection === "inline_cta" && (
+                <div className="space-y-6" data-admin-section-key="inline_cta">
+                    <RichTextEditor
+                        label="Heading"
+                        editorKey="english-coaching-inline-cta-heading"
+                        value={s("inline_cta").heading ?? ""}
+                        onChange={(v) => updateSection("inline_cta", { heading: v })}
+                        placeholder="Ready to get started?"
+                        tools={["bold", "italic", "color"]}
+                        error={errors.inline_cta?.heading}
+                    />
+
+                    <RichTextEditor
+                        label="Subheading"
+                        editorKey="english-coaching-inline-cta-subheading"
+                        value={s("inline_cta").subheading ?? ""}
+                        onChange={(v) => updateSection("inline_cta", { subheading: v })}
+                        placeholder="Send me a message and we'll sort out availability and next steps."
+                        tools={["bold", "italic", "link", "color"]}
+                        error={errors.inline_cta?.subheading}
+                    />
+                </div>
+            )}
+
+            {activeSection === "testimonials" && (
+                <div className="space-y-6" data-admin-section-key="testimonials">
+                    <RichTextEditor
+                        label="Eyebrow"
+                        editorKey="english-coaching-testimonials-eyebrow"
+                        value={s("testimonials").eyebrow ?? ""}
+                        onChange={(v) => updateSection("testimonials", { eyebrow: v })}
+                        placeholder="What clients say"
+                        tools={["bold", "italic", "color"]}
+                        error={errors.testimonials?.eyebrow}
+                    />
+
+                    {sharedContentNavigatorMap[activeSection] && (
+                        <div className="pt-4">
+                            <SharedContentNavigator
+                                href={sharedContentNavigatorMap[activeSection].href}
+                                navLabel={sharedContentNavigatorMap[activeSection].navLabel}
+                                textBeforNav={sharedContentNavigatorMap[activeSection].textBeforNav}
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeSection === "faq" && (
+                <div className="space-y-6" data-admin-section-key="faq">
+                    <RichTextEditor
+                        label="Section heading"
+                        editorKey="english-coaching-faq-heading"
+                        value={s("faq").heading ?? ""}
+                        onChange={(v) => updateSection("faq", { heading: v })}
+                        placeholder="Common Questions"
+                        tools={["bold", "italic", "color"]}
+                        error={errors.faq?.heading}
+                    />
+
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-medium">FAQ items</h3>
+                                <p className="text-xs text-[#3B5249]/55">Drag to reorder</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => addBlock("faq", { question: "", answer: "" })}
+                                className="text-[#7B6E9E] text-sm flex items-center gap-1 hover:underline"
+                            >
+                                <Plus size={16} /> Add FAQ
+                            </button>
+                        </div>
+                        {getBlocks<FaqBlock>("faq").length === 0 && (
+                            <div className="p-4 text-[#3B5249]/55">No FAQ items added yet.</div>
+                        )}
+                        <div className="space-y-4">
+                            {getBlocks<FaqBlock>("faq").map((block, i) => (
+                                <div
+                                    key={block.id}
+                                    draggable
+                                    onDragStart={() => setDragIndex(i)}
+                                    onDragEnd={() => setDragIndex(null)}
+                                    onDragOver={(e) => e.preventDefault()}
+                                    onDrop={() => {
+                                        if (dragIndex === null) return;
+                                        moveBlock("faq", dragIndex, i);
+                                        setDragIndex(null);
+                                    }}
+                                    className={`border border-[#D4B483]/20 rounded-xl p-4 bg-white ${dragIndex === i ? "ring-2 ring-[#7B6E9E]/40" : ""}`}
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-2 text-sm font-medium">
+                                            <span className="text-[#3B5249]/45 cursor-grab select-none">
+                                                <GripVertical size={18} />
+                                            </span>
+                                            FAQ {i + 1}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeBlock("faq", i)}
+                                            className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded flex items-center gap-1"
+                                        >
+                                            <Trash2 size={14} /> Remove
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <RichTextEditor
+                                            label="Question"
+                                            editorKey={`english-faq-question-${block.id}`}
+                                            value={block.question ?? ""}
+                                            onChange={(v) => updateBlock("faq", i, { question: v })}
+                                            placeholder="How long are sessions?"
+                                            tools={["bold", "italic", "color"]}
+                                            error={errors.faq?.blocks?.[i]?.question}
+                                        />
+
+                                        <RichTextEditor
+                                            label="Answer"
+                                            editorKey={`english-faq-answer-${block.id}`}
+                                            value={block.answer ?? ""}
+                                            onChange={(v) => updateBlock("faq", i, { answer: v })}
+                                            placeholder="Sessions are 45 minutes long..."
+                                            tools={["bold", "italic", "link", "color"]}
+                                            error={errors.faq?.blocks?.[i]?.answer}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeSection === "bottom_cta" && (
+                <div data-admin-section-key="bottom_cta">
+                    <CTA
+                        title={s("bottom_cta").heading ?? ""}
+                        onTitleChange={(v) => updateSection("bottom_cta", { heading: v })}
+                        titleError={errors.bottom_cta?.heading}
+                        description={s("bottom_cta").body ?? ""}
+                        onDescriptionChange={(v) => updateSection("bottom_cta", { body: v })}
+                        editorKey="english-coaching-bottom-cta-body"
+                        descriptionError={errors.bottom_cta?.body}
+                        buttons={[
+                            {
+                                text: s("bottom_cta").getInTouchButtonText,
+                                link: s("bottom_cta").getInTouchButtonLink,
+                                onTextChange: (v) =>
+                                    updateSection("bottom_cta", { getInTouchButtonText: v }),
+                                onLinkChange: (v) =>
+                                    updateSection("bottom_cta", { getInTouchButtonLink: v }),
+                                textLabel: "Button text",
+                                linkLabel: "Button link",
+                                textPlaceholder: "Book your free discovery call",
+                                linkPlaceholder: "/contact",
+                                textError: errors.bottom_cta?.getInTouchButtonText,
+                                linkError: errors.bottom_cta?.getInTouchButtonLink,
+                            },
+                        ]}
+                    />
+                </div>
+            )}
+        </AdminPageLayout>
+    );
+}
