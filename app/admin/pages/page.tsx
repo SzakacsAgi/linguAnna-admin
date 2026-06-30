@@ -64,7 +64,7 @@ export default function PagesAdminPage() {
       title: "Article",
       icon: FileText,
       href: "/admin/pages/article",
-      sections: ["Banner", "CTA"],
+      sections: ["Header", "Banner", "CTA", "Others"],
     },
     {
       title: "Not found",

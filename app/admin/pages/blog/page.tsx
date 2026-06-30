@@ -35,6 +35,10 @@ type SectionContent = {
   allPostsText?: string;
   placeholder?: string;
   footnote?: string;
+  invalidEmailMessage?: string;
+  submitErrorMessage?: string;
+  successMessage?: string;
+  subscribingButtonText?: string;
 };
 
 type BlogCategory = {
@@ -772,10 +776,54 @@ export default function BlogPageEditor() {
               }
               error={(errors.newsletter as any)?.footnote}
             />
-            <p className="text-xs text-[#3B5249]/55">
-              The signup form is presentational for now — it does not collect
-              email addresses yet.
-            </p>
+            <GeneralInput
+              label="Subscribing button text (loading)"
+              placeholder='e.g. "Subscribing..."'
+              value={newsletter.subscribingButtonText || ""}
+              onChange={(e) =>
+                updateSection(
+                  "newsletter",
+                  "subscribingButtonText",
+                  e.target.value,
+                )
+              }
+              error={(errors.newsletter as any)?.subscribingButtonText}
+            />
+            <GeneralInput
+              label="Success message"
+              placeholder='e.g. "Thanks for subscribing!"'
+              value={newsletter.successMessage || ""}
+              onChange={(e) =>
+                updateSection("newsletter", "successMessage", e.target.value)
+              }
+              error={(errors.newsletter as any)?.successMessage}
+            />
+            <GeneralInput
+              label="Invalid email message"
+              placeholder='e.g. "Invalid email address."'
+              value={newsletter.invalidEmailMessage || ""}
+              onChange={(e) =>
+                updateSection(
+                  "newsletter",
+                  "invalidEmailMessage",
+                  e.target.value,
+                )
+              }
+              error={(errors.newsletter as any)?.invalidEmailMessage}
+            />
+            <GeneralInput
+              label="Submit error message"
+              placeholder='e.g. "Something went wrong. Please try again later."'
+              value={newsletter.submitErrorMessage || ""}
+              onChange={(e) =>
+                updateSection(
+                  "newsletter",
+                  "submitErrorMessage",
+                  e.target.value,
+                )
+              }
+              error={(errors.newsletter as any)?.submitErrorMessage}
+            />
           </div>
         )}
 
