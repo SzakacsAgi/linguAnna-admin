@@ -202,7 +202,6 @@ function AdminLayoutShell({
         <AdminTitleSync />
 
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,hsl(var(--primary)_/_0.14),transparent_45%),radial-gradient(circle_at_80%_30%,hsl(var(--secondary)_/_0.12),transparent_50%),radial-gradient(circle_at_40%_85%,hsl(var(--accent)_/_0.12),transparent_45%)]" />
-        <div className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(to_right,hsl(var(--foreground)_/_0.35)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--foreground)_/_0.35)_1px,transparent_1px)] [background-size:72px_72px]" />
 
         <main className="relative min-h-screen px-4 py-10 flex items-center justify-center">
           <div className="w-full max-w-3xl">
@@ -234,8 +233,8 @@ function AdminLayoutShell({
             <Image
               src="/linguaAnna-logo.png"
               alt="Lingua Anna Logo"
-              width={130}
-              height={130}
+              width={50}
+              height={50}
               className="object-contain"
             />
           </Link>
@@ -261,12 +260,12 @@ function AdminLayoutShell({
             }`}
         >
           <div className="p-6 border-b border-[#D4B483]/25">
-            <Link href="/admin" className="flex items-center gap-1.5">
+            <Link href="/admin" className="flex items-center gap-2">
               <Image
                 src="/linguaAnna-logo.png"
                 alt="Lingua Anna Logo"
-                width={130}
-                height={130}
+                width={50}
+                height={50}
                 className="object-contain"
               />
               <span className="font-bold text-lg text-[#3B5249]">Admin</span>

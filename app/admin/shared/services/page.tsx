@@ -259,7 +259,7 @@ export default function ServicesAdminPage() {
       </div>
 
       {/* Services List */}
-      <div className="bg-white rounded-2xl border border-[#D4B483]/20 shadow-sm">
+      <div className="bg-white rounded-2xl mt-6 border border-[#D4B483]/20 shadow-sm">
         {services.length === 0 ? (
           <div className="p-12 text-center">
             <Award className="mx-auto text-[#3B5249]/30 mb-4" size={48} />

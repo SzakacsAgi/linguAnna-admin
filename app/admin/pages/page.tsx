@@ -58,7 +58,7 @@ export default function PagesAdminPage() {
       title: "Blog",
       icon: PenTool,
       href: "/admin/pages/blog",
-      sections: ["Hero", "Categories", "CTA"],
+      sections: ["Header", "Featured", "Recent Musings", "Newsletter", "Categories", "No posts"],
     },
     {
       title: "Article",
