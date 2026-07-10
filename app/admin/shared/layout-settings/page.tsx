@@ -34,7 +34,6 @@ const LAYOUT_SECTIONS: { key: LayoutSectionKey; label: string }[] = [
 interface NavLink {
   href: string;
   label: string;
-  isContact?: boolean;
 }
 
 interface SocialLink {
@@ -373,7 +372,7 @@ export default function LayoutSettingsPage() {
       ...headerData,
       navLinks: [
         ...headerData.navLinks,
-        { href: "", label: "", isContact: false },
+        { href: "", label: "" },
       ],
     });
     setHeaderHasChanges(true);
@@ -578,10 +577,6 @@ export default function LayoutSettingsPage() {
                 <h2 className="text-lg font-semibold text-[#3B5249]">
                   Navigation Links
                 </h2>
-                <p className="text-xs text-[#3B5249]/55">
-                  List your nav items. Check "contact link" for the contact
-                  link, because of the separate link style.
-                </p>
               </div>
 
               <button
@@ -642,20 +637,6 @@ export default function LayoutSettingsPage() {
                       error={headerErrors.navLinks?.[index]?.href}
                     />
                   </div>
-
-                  <label className="flex items-center gap-2 px-2 py-1 rounded-md border border-[#D4B483]/25 bg-white">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(link.isContact)}
-                      onChange={(e) =>
-                        updateNavLink(index, "isContact", e.target.checked)
-                      }
-                      className="h-4 w-4 text-[#7B6E9E] border-[#D4B483]/35 rounded focus:ring-[#7B6E9E]/30"
-                    />
-                    <span className="text-xs text-[#3B5249]/80 whitespace-nowrap">
-                      contact link
-                    </span>
-                  </label>
 
                   <button
                     type="button"

@@ -188,8 +188,11 @@ export default function EnglishCoachingPageEditor() {
         if (requiredError(inlineCta.heading, true)) {
             inlineCtaErrs.heading = requiredError(inlineCta.heading, true);
         }
-        if (requiredError(inlineCta.subheading, true)) {
-            inlineCtaErrs.subheading = requiredError(inlineCta.subheading, true);
+        if (requiredError(inlineCta.buttonText)) {
+            inlineCtaErrs.buttonText = requiredError(inlineCta.buttonText);
+        }
+        if (requiredError(inlineCta.buttonLink)) {
+            inlineCtaErrs.buttonLink = requiredError(inlineCta.buttonLink);
         }
         if (Object.keys(inlineCtaErrs).length) next.inline_cta = inlineCtaErrs;
 
@@ -502,15 +505,22 @@ export default function EnglishCoachingPageEditor() {
                         error={errors.inline_cta?.heading}
                     />
 
-                    <RichTextEditor
-                        label="Subheading"
-                        editorKey="english-coaching-inline-cta-subheading"
-                        value={s("inline_cta").subheading ?? ""}
-                        onChange={(v) => updateSection("inline_cta", { subheading: v })}
-                        placeholder="Send me a message and we'll sort out availability and next steps."
-                        tools={["bold", "italic", "link", "color"]}
-                        error={errors.inline_cta?.subheading}
-                    />
+                    <div className="grid lg:grid-cols-2 gap-6">
+                        <GeneralInput
+                            label="Button text"
+                            value={s("inline_cta").buttonText ?? ""}
+                            onChange={(e) => updateSection("inline_cta", { buttonText: e.target.value })}
+                            placeholder="Book a free discovery call"
+                            error={errors.inline_cta?.buttonText}
+                        />
+                        <GeneralInput
+                            label="Button link"
+                            value={s("inline_cta").buttonLink ?? ""}
+                            onChange={(e) => updateSection("inline_cta", { buttonLink: e.target.value })}
+                            placeholder="/contact"
+                            error={errors.inline_cta?.buttonLink}
+                        />
+                    </div>
                 </div>
             )}
 

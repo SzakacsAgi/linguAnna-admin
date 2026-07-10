@@ -34,8 +34,8 @@ const sections = [
   { key: "journey", label: "My Journey" },
   { key: "credentials", label: "Credentials" },
   { key: "why_coaching", label: "Why Coaching" },
-  { key: "who_i_work_with", label: "Who I Work With" },
   { key: "glimpse", label: "Glimpse Into My World" },
+  { key: "who_i_work_with", label: "Who I Work With" },
   { key: "cta", label: "CTA" },
 ];
 
@@ -483,6 +483,93 @@ export default function AboutPageEditor() {
         </div>
       )}
 
+      {/* =================== GLIMPSE =================== */}
+      {activeSection === "glimpse" && (
+        <div className="space-y-6" data-admin-section-key="glimpse">
+          <GeneralInput
+            label="Section heading"
+            value={s("glimpse").heading ?? ""}
+            onChange={(e) => updateSection("glimpse", { heading: e.target.value })}
+            placeholder="A Glimpse Into My World"
+            error={errors.glimpse?.heading}
+          />
+          <RichTextEditor
+            label="Body text"
+            editorKey="about-glimpse-body"
+            value={s("glimpse").body ?? ""}
+            onChange={(v) => updateSection("glimpse", { body: v })}
+            placeholder="Outside of languages, I'm endlessly curious about personal growth..."
+            tools={["bold", "italic", "link"]}
+            error={errors.glimpse?.body}
+          />
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium">Photos</h3>
+                <p className="text-xs text-[#3B5249]/55">Drag to reorder</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => addBlock("glimpse", { imageAlt: "" })}
+                className="text-[#7B6E9E] text-sm flex items-center gap-1 hover:underline"
+              >
+                <Plus size={16} /> Add photo
+              </button>
+            </div>
+
+            {getBlocks("glimpse").length === 0 ? (
+              <div className="text-sm text-[#3B5249]/55 border border-dashed border-[#D4B483]/35 rounded-lg p-4">
+                No photos yet.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {getBlocks("glimpse").map((block, i) => (
+                  <div
+                    key={block.id}
+                    draggable
+                    onDragStart={() => setDragIndex(i)}
+                    onDragEnd={() => setDragIndex(null)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => {
+                      if (dragIndex === null) return;
+                      moveBlock("glimpse", dragIndex, i);
+                      setDragIndex(null);
+                    }}
+                    className={`border border-[#D4B483]/20 rounded-xl p-4 bg-white ${dragIndex === i ? "ring-2 ring-[#7B6E9E]/40" : ""}`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <span className="text-[#3B5249]/45 cursor-grab select-none">
+                          <GripVertical size={18} />
+                        </span>
+                        Photo {i + 1}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeBlock("glimpse", i)}
+                        className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded flex items-center gap-1"
+                      >
+                        <Trash2 size={14} /> Remove
+                      </button>
+                    </div>
+                    <ImageUploader
+                      label="Photo"
+                      storageId={block.imageStorageId}
+                      alt={block.imageAlt ?? ""}
+                      onImageChange={(id) => updateBlock("glimpse", i, { imageStorageId: id })}
+                      onBlurDataUrlChange={(blur) => updateBlock("glimpse", i, { imageBlurDataUrl: blur })}
+                      onAltChange={(v) => updateBlock("glimpse", i, { imageAlt: v })}
+                      previewSize={200}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* =================== WHO I WORK WITH =================== */}
       {activeSection === "who_i_work_with" && (
         <div className="space-y-6" data-admin-section-key="who_i_work_with">
@@ -583,99 +670,6 @@ export default function AboutPageEditor() {
                         />
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* =================== GLIMPSE =================== */}
-      {activeSection === "glimpse" && (
-        <div className="space-y-6" data-admin-section-key="glimpse">
-          <GeneralInput
-            label="Eyebrow label"
-            value={s("glimpse").subheading ?? ""}
-            onChange={(e) => updateSection("glimpse", { subheading: e.target.value })}
-            placeholder="BEYOND COACHING"
-          />
-          <GeneralInput
-            label="Section heading"
-            value={s("glimpse").heading ?? ""}
-            onChange={(e) => updateSection("glimpse", { heading: e.target.value })}
-            placeholder="A Glimpse Into My World"
-            error={errors.glimpse?.heading}
-          />
-          <RichTextEditor
-            label="Body text"
-            editorKey="about-glimpse-body"
-            value={s("glimpse").body ?? ""}
-            onChange={(v) => updateSection("glimpse", { body: v })}
-            placeholder="Outside of languages, I'm endlessly curious about personal growth..."
-            tools={["bold", "italic", "link"]}
-            error={errors.glimpse?.body}
-          />
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium">Photos</h3>
-                <p className="text-xs text-[#3B5249]/55">Drag to reorder</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => addBlock("glimpse", { imageAlt: "" })}
-                className="text-[#7B6E9E] text-sm flex items-center gap-1 hover:underline"
-              >
-                <Plus size={16} /> Add photo
-              </button>
-            </div>
-
-            {getBlocks("glimpse").length === 0 ? (
-              <div className="text-sm text-[#3B5249]/55 border border-dashed border-[#D4B483]/35 rounded-lg p-4">
-                No photos yet.
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                {getBlocks("glimpse").map((block, i) => (
-                  <div
-                    key={block.id}
-                    draggable
-                    onDragStart={() => setDragIndex(i)}
-                    onDragEnd={() => setDragIndex(null)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => {
-                      if (dragIndex === null) return;
-                      moveBlock("glimpse", dragIndex, i);
-                      setDragIndex(null);
-                    }}
-                    className={`border border-[#D4B483]/20 rounded-xl p-4 bg-white ${dragIndex === i ? "ring-2 ring-[#7B6E9E]/40" : ""}`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <span className="text-[#3B5249]/45 cursor-grab select-none">
-                          <GripVertical size={18} />
-                        </span>
-                        Photo {i + 1}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeBlock("glimpse", i)}
-                        className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded flex items-center gap-1"
-                      >
-                        <Trash2 size={14} /> Remove
-                      </button>
-                    </div>
-                    <ImageUploader
-                      label="Photo"
-                      storageId={block.imageStorageId}
-                      alt={block.imageAlt ?? ""}
-                      onImageChange={(id) => updateBlock("glimpse", i, { imageStorageId: id })}
-                      onBlurDataUrlChange={(blur) => updateBlock("glimpse", i, { imageBlurDataUrl: blur })}
-                      onAltChange={(v) => updateBlock("glimpse", i, { imageAlt: v })}
-                      previewSize={200}
-                    />
                   </div>
                 ))}
               </div>

@@ -21,6 +21,7 @@ import SharedContentNavigator from '@/components/admin/SharedContentNavigator';
 
 type ImageBlock = {
   id: string;
+  eyebrow?: string;
   heading?: string;
   body?: string;
   imageStorageId?: Id<"_storage">;
@@ -199,7 +200,6 @@ export default function HungarianCoachingPageEditor() {
       if (requiredError(b.body, true)) e.body = requiredError(b.body, true);
       if (requiredError(b.imageStorageId)) e.imageStorageId = requiredError(b.imageStorageId);
       if (requiredError(b.imageAlt)) e.imageAlt = requiredError(b.imageAlt);
-      if (requiredError(b.iconStorageId)) e.iconStorageId = requiredError(b.iconStorageId);
       return e;
     });
     if (pathBlockErrs.some((e) => Object.keys(e).length)) pathsErrs.blocks = pathBlockErrs;
@@ -230,8 +230,11 @@ export default function HungarianCoachingPageEditor() {
     if (requiredError(inlineCta.heading, true)) {
       inlineCtaErrs.heading = requiredError(inlineCta.heading, true);
     }
-    if (requiredError(inlineCta.subheading, true)) {
-      inlineCtaErrs.subheading = requiredError(inlineCta.subheading, true);
+    if (requiredError(inlineCta.buttonText)) {
+      inlineCtaErrs.buttonText = requiredError(inlineCta.buttonText);
+    }
+    if (requiredError(inlineCta.buttonLink)) {
+      inlineCtaErrs.buttonLink = requiredError(inlineCta.buttonLink);
     }
     if (Object.keys(inlineCtaErrs).length) next.inline_cta = inlineCtaErrs;
 
@@ -437,11 +440,11 @@ export default function HungarianCoachingPageEditor() {
                 type="button"
                 onClick={() =>
                   addBlock("paths", {
+                    eyebrow: "",
                     heading: "",
                     body: "",
                     imageStorageId: undefined,
                     imageAlt: "",
-                    iconStorageId: undefined,
                   })
                 }
                 className="text-[#7B6E9E] text-sm flex items-center gap-1 hover:underline"
@@ -487,6 +490,13 @@ export default function HungarianCoachingPageEditor() {
 
                   <div className="grid lg:grid-cols-2 gap-6">
                     <div className="space-y-4">
+                      <GeneralInput
+                        label="Eyebrow"
+                        value={block.eyebrow ?? ""}
+                        onChange={(e) => updateBlock("paths", i, { eyebrow: e.target.value })}
+                        placeholder="Communication"
+                        error={errors.paths?.blocks?.[i]?.eyebrow}
+                      />
                       <RichTextEditor
                         label="Card heading"
                         editorKey={`paths-block-heading-${block.id}`}
@@ -509,15 +519,6 @@ export default function HungarianCoachingPageEditor() {
                     </div>
 
                     <div className="space-y-4">
-                      <ImageUploader
-                        label="Icon"
-                        storageId={block.iconStorageId}
-                        alt={block.iconAlt ?? ""}
-                        onImageChange={(id) => updateBlock("paths", i, { iconStorageId: id })}
-                        onAltChange={(v) => updateBlock("paths", i, { iconAlt: v })}
-                        previewSize={80}
-                        error={errors.paths?.blocks?.[i]?.iconStorageId}
-                      />
                       <ImageUploader
                         label="Card image"
                         storageId={block.imageStorageId}
@@ -721,15 +722,22 @@ export default function HungarianCoachingPageEditor() {
             error={errors.inline_cta?.heading}
           />
 
-          <RichTextEditor
-            label="Subheading"
-            editorKey="hungarian-coaching-inline-cta-subheading"
-            value={s("inline_cta").subheading ?? ""}
-            onChange={(v) => updateSection("inline_cta", { subheading: v })}
-            placeholder="Send me a message and we'll sort out availability and next steps."
-            tools={["bold", "italic", "link", "color"]}
-            error={errors.inline_cta?.subheading}
-          />
+          <div className="grid lg:grid-cols-2 gap-6">
+            <GeneralInput
+              label="Button text"
+              value={s("inline_cta").buttonText ?? ""}
+              onChange={(e) => updateSection("inline_cta", { buttonText: e.target.value })}
+              placeholder="Book a free discovery call"
+              error={errors.inline_cta?.buttonText}
+            />
+            <GeneralInput
+              label="Button link"
+              value={s("inline_cta").buttonLink ?? ""}
+              onChange={(e) => updateSection("inline_cta", { buttonLink: e.target.value })}
+              placeholder="/contact"
+              error={errors.inline_cta?.buttonLink}
+            />
+          </div>
         </div>
       )}
 

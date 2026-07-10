@@ -34,7 +34,7 @@ export default function PagesAdminPage() {
       title: "About",
       icon: User,
       href: "/admin/pages/about",
-      sections: ["Hero", "My journey", "Credentials", "Why coaching", "Who I work with", "Glimpse", "CTA"],
+      sections: ["Hero", "My journey", "Credentials", "Why coaching", "Glimpse", "Who I work with", "CTA"],
     },
     {
       title: "Hungarian Coaching",
