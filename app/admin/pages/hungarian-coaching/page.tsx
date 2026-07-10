@@ -40,6 +40,7 @@ type PricingBlock = {
   validity?: string;
   buttonText?: string;
   buttonLink?: string;
+  contactSubject?: string;
   mostPopularBadgeText?: string;
   mostPopular?: boolean;
 };
@@ -219,7 +220,7 @@ export default function HungarianCoachingPageEditor() {
       if (requiredError(b.priceHUF)) e.priceHUF = requiredError(b.priceHUF);
       if (requiredError(b.validity)) e.validity = requiredError(b.validity);
       if (requiredError(b.buttonText)) e.buttonText = requiredError(b.buttonText);
-      if (requiredError(b.buttonLink)) e.buttonLink = requiredError(b.buttonLink);
+      if (requiredError(b.contactSubject)) e.contactSubject = requiredError(b.contactSubject);
       return e;
     });
     if (pricingBlockErrs.some((e) => Object.keys(e).length)) pricingErrs.blocks = pricingBlockErrs;
@@ -577,7 +578,7 @@ export default function HungarianCoachingPageEditor() {
                     priceEUR: "",
                     validity: "",
                     buttonText: "",
-                    buttonLink: "",
+                    contactSubject: "Conversation classes enquiry",
                     mostPopular: false,
                   })
                 }
@@ -672,11 +673,11 @@ export default function HungarianCoachingPageEditor() {
                         error={errors.pricing?.blocks?.[i]?.buttonText}
                       />
                       <GeneralInput
-                        label="Button link"
-                        value={block.buttonLink ?? ""}
-                        onChange={(e) => updateBlock("pricing", i, { buttonLink: e.target.value })}
-                        placeholder="/contact"
-                        error={errors.pricing?.blocks?.[i]?.buttonLink}
+                        label="Contact form subject"
+                        value={block.contactSubject ?? ""}
+                        onChange={(e) => updateBlock("pricing", i, { contactSubject: e.target.value })}
+                        placeholder="Conversation classes enquiry"
+                        error={errors.pricing?.blocks?.[i]?.contactSubject}
                       />
                       <label className="flex items-center w-fit gap-2 px-2 py-1 rounded-md border border-[#D4B483]/25 bg-white">
                         <input
