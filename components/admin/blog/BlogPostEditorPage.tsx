@@ -345,7 +345,7 @@ export default function BlogPostEditorPage({
                   }}
                   error={errors.excerpt}
                   placeholder="Brief summary of the post..."
-                  tools={["heading", "bold", "italic", "link", "emoji"]}
+                  tools={["bold", "italic", "link", "emoji", "fontFamily", "fontWeight", "color"]}
                   editorClassName="min-h-[120px]"
                 />
               </div>
@@ -363,7 +363,7 @@ export default function BlogPostEditorPage({
                     setErrors((prev) => ({ ...prev, content: undefined }));
                   }}
                   placeholder="Write your post content here..."
-                  tools={["heading", "lists", "bold", "italic", "link", "emoji"]}
+                  tools={["heading", "lists", "bold", "italic", "link", "emoji", "fontFamily", "fontWeight", "color"]}
                   editorClassName="min-h-[360px]"
                   error={errors.content}
                 />
