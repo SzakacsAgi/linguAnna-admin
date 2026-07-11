@@ -23,6 +23,70 @@ type ImageUploaderProps = {
   hideAlt?: boolean;
 };
 
+// Raster formats we can safely re-encode. SVG/GIF are left untouched to avoid
+// breaking vector scaling or animation.
+const COMPRESSIBLE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+// Only compress when the file is heavier than this…
+const COMPRESS_SIZE_THRESHOLD = 1024 * 1024; // 1 MB
+// …or larger than this on its longest edge.
+const MAX_IMAGE_DIMENSION = 2000; // px
+const OUTPUT_QUALITY = 0.82;
+
+/**
+ * Downscale + re-encode oversized images before upload so we never store
+ * multi-megabyte originals. Returns the original file untouched when it is
+ * already small enough, not a raster image, or if compression fails/grows it.
+ */
+async function compressImageIfNeeded(
+  file: File,
+): Promise<{ body: Blob; type: string }> {
+  if (!COMPRESSIBLE_TYPES.has(file.type)) {
+    return { body: file, type: file.type };
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const longestEdge = Math.max(bitmap.width, bitmap.height);
+    const needsResize = longestEdge > MAX_IMAGE_DIMENSION;
+    const needsRecompress = file.size > COMPRESS_SIZE_THRESHOLD;
+
+    if (!needsResize && !needsRecompress) {
+      bitmap.close?.();
+      return { body: file, type: file.type };
+    }
+
+    const scale = needsResize ? MAX_IMAGE_DIMENSION / longestEdge : 1;
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      bitmap.close?.();
+      return { body: file, type: file.type };
+    }
+
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close?.();
+
+    // WebP keeps alpha (unlike JPEG) and compresses photos very well.
+    const outputType = "image/webp";
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob((b) => resolve(b), outputType, OUTPUT_QUALITY),
+    );
+
+    // Only keep the re-encoded version if it is actually smaller.
+    if (blob && blob.size < file.size) {
+      return { body: blob, type: outputType };
+    }
+    return { body: file, type: file.type };
+  } catch {
+    return { body: file, type: file.type };
+  }
+}
+
 async function generateBlurDataUrlFromFile(
   file: File,
 ): Promise<string | undefined> {
@@ -116,12 +180,14 @@ export default function ImageUploader({
         onBlurDataUrlChange(blur);
       }
 
+      const { body, type } = await compressImageIfNeeded(file);
+
       const uploadUrl = await generateUploadUrl();
 
       const res = await fetch(uploadUrl, {
         method: "POST",
-        headers: { "Content-Type": file.type },
-        body: file,
+        headers: { "Content-Type": type },
+        body,
       });
 
       if (!res.ok) throw new Error("Upload failed");
