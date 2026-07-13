@@ -56,7 +56,6 @@ type SectionData = Record<string, any>;
 const sections = [
   { key: "hero", label: "Hero" },
   { key: "paths", label: "Learning Paths" },
-  { key: "pricing", label: "Pricing" },
   { key: "inline_cta", label: "Inline CTA" },
   { key: "testimonials", label: "Testimonials" },
   { key: "faq", label: "FAQ" },
@@ -206,25 +205,25 @@ export default function HungarianCoachingPageEditor() {
     if (pathBlockErrs.some((e) => Object.keys(e).length)) pathsErrs.blocks = pathBlockErrs;
     if (Object.keys(pathsErrs).length) next.paths = pathsErrs;
 
-    const pricing = formData.pricing ?? {};
-    const pricingErrs: any = {};
-    if (requiredError(pricing.eyebrow)) pricingErrs.eyebrow = requiredError(pricing.eyebrow);
-    if (requiredError(pricing.heading, true)) pricingErrs.heading = requiredError(pricing.heading, true);
+    // const pricing = formData.pricing ?? {};
+    // const pricingErrs: any = {};
+    // if (requiredError(pricing.eyebrow)) pricingErrs.eyebrow = requiredError(pricing.eyebrow);
+    // if (requiredError(pricing.heading, true)) pricingErrs.heading = requiredError(pricing.heading, true);
 
-    const pricingBlocks = (pricing.blocks ?? []) as PricingBlock[];
-    const pricingBlockErrs = pricingBlocks.map((b) => {
-      const e: any = {};
-      if (requiredError(b.name)) e.name = requiredError(b.name);
-      if (requiredError(b.sessionsLabel)) e.sessionsLabel = requiredError(b.sessionsLabel);
-      if (requiredError(b.priceEUR)) e.priceEUR = requiredError(b.priceEUR);
-      if (requiredError(b.priceHUF)) e.priceHUF = requiredError(b.priceHUF);
-      if (requiredError(b.validity)) e.validity = requiredError(b.validity);
-      if (requiredError(b.buttonText)) e.buttonText = requiredError(b.buttonText);
-      if (requiredError(b.contactSubject)) e.contactSubject = requiredError(b.contactSubject);
-      return e;
-    });
-    if (pricingBlockErrs.some((e) => Object.keys(e).length)) pricingErrs.blocks = pricingBlockErrs;
-    if (Object.keys(pricingErrs).length) next.pricing = pricingErrs;
+    // const pricingBlocks = (pricing.blocks ?? []) as PricingBlock[];
+    // const pricingBlockErrs = pricingBlocks.map((b) => {
+    //   const e: any = {};
+    //   if (requiredError(b.name)) e.name = requiredError(b.name);
+    //   if (requiredError(b.sessionsLabel)) e.sessionsLabel = requiredError(b.sessionsLabel);
+    //   if (requiredError(b.priceEUR)) e.priceEUR = requiredError(b.priceEUR);
+    //   if (requiredError(b.priceHUF)) e.priceHUF = requiredError(b.priceHUF);
+    //   if (requiredError(b.validity)) e.validity = requiredError(b.validity);
+    //   if (requiredError(b.buttonText)) e.buttonText = requiredError(b.buttonText);
+    //   if (requiredError(b.contactSubject)) e.contactSubject = requiredError(b.contactSubject);
+    //   return e;
+    // });
+    // if (pricingBlockErrs.some((e) => Object.keys(e).length)) pricingErrs.blocks = pricingBlockErrs;
+    // if (Object.keys(pricingErrs).length) next.pricing = pricingErrs;
 
     const inlineCta = formData.inline_cta ?? {};
     const inlineCtaErrs: any = {};
@@ -542,7 +541,7 @@ export default function HungarianCoachingPageEditor() {
         </div>
       )}
 
-      {activeSection === "pricing" && (
+      {/* {activeSection === "pricing" && (
         <div className="space-y-6" data-admin-section-key="pricing">
           <GeneralInput
             label="Eyebrow"
@@ -709,7 +708,7 @@ export default function HungarianCoachingPageEditor() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {activeSection === "inline_cta" && (
         <div className="space-y-6" data-admin-section-key="inline_cta">
