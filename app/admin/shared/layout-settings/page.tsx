@@ -49,6 +49,17 @@ interface HeaderData {
   navLinks: NavLink[];
 }
 
+interface NewsletterData {
+  eyebrow: string;
+  description: string;
+  placeholder: string;
+  buttonText: string;
+  subscribingButtonText: string;
+  successMessage: string;
+  invalidEmailMessage: string;
+  submitErrorMessage: string;
+}
+
 interface FooterData {
   brandName: string;
   tagline: string;
@@ -58,12 +69,24 @@ interface FooterData {
   copyrightText: string;
   contactColumnTitle: string;
   legalColumnTitle: string;
+  newsletter: NewsletterData;
 }
 
 const emptyHeaderData: HeaderData = {
   logoUrl: "",
   logoAlt: "",
   navLinks: [],
+};
+
+const emptyNewsletterData: NewsletterData = {
+  eyebrow: "",
+  description: "",
+  placeholder: "",
+  buttonText: "",
+  subscribingButtonText: "",
+  successMessage: "",
+  invalidEmailMessage: "",
+  submitErrorMessage: "",
 };
 
 const emptyFooterData: FooterData = {
@@ -79,6 +102,7 @@ const emptyFooterData: FooterData = {
   copyrightText: "",
   contactColumnTitle: "",
   legalColumnTitle: "",
+  newsletter: emptyNewsletterData,
 };
 
 export default function LayoutSettingsPage() {
@@ -120,6 +144,7 @@ export default function LayoutSettingsPage() {
     legalLinks?: Array<{ label?: string; url?: string }>;
     legalLinksGeneral?: string;
     copyrightText?: string;
+    newsletter?: Partial<Record<keyof NewsletterData, string>>;
   }>({});
 
   const pendingFocusSectionKeyRef = useRef<LayoutSectionKey | null>(null);
@@ -178,6 +203,10 @@ export default function LayoutSettingsPage() {
         label: string;
         url: string;
       }>,
+      newsletter: {
+        ...emptyNewsletterData,
+        ...(savedData.newsletter ?? {}),
+      },
     });
 
     setFooterHasChanges(false);
@@ -250,6 +279,24 @@ export default function LayoutSettingsPage() {
       if (!hasLegalErrors) {
         delete nextErrors.legalLinks;
       }
+    }
+
+    const newsletter = footerData.newsletter ?? emptyNewsletterData;
+    nextErrors.newsletter = {
+      eyebrow: requiredError(newsletter.eyebrow),
+      description: requiredError(newsletter.description),
+      placeholder: requiredError(newsletter.placeholder),
+      buttonText: requiredError(newsletter.buttonText),
+      subscribingButtonText: requiredError(newsletter.subscribingButtonText),
+      successMessage: requiredError(newsletter.successMessage),
+      invalidEmailMessage: requiredError(newsletter.invalidEmailMessage),
+      submitErrorMessage: requiredError(newsletter.submitErrorMessage),
+    };
+    const hasNewsletterErrors = Object.values(nextErrors.newsletter).some(
+      Boolean,
+    );
+    if (!hasNewsletterErrors) {
+      delete nextErrors.newsletter;
     }
 
     const hasAnyErrors = Object.values(nextErrors).some((v) => {
@@ -435,6 +482,14 @@ export default function LayoutSettingsPage() {
     const newLinks = [...footerData.legalLinks];
     newLinks[index] = { ...newLinks[index], [field]: value };
     setFooterData({ ...footerData, legalLinks: newLinks });
+    setFooterHasChanges(true);
+  };
+
+  const updateNewsletter = (field: keyof NewsletterData, value: string) => {
+    setFooterData({
+      ...footerData,
+      newsletter: { ...footerData.newsletter, [field]: value },
+    });
     setFooterHasChanges(true);
   };
 
@@ -886,6 +941,91 @@ export default function LayoutSettingsPage() {
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Newsletter */}
+          <div className="space-y-4 border-t pt-6">
+            <h2 className="text-lg font-semibold text-[#3B5249]">
+              Newsletter Signup
+            </h2>
+            <p className="text-sm text-[#3B5249]/55">
+              Shown as a subscribe widget above the footer columns. Clicking
+              subscribe uses the same subscription flow (and validation) as
+              the blog newsletter form.
+            </p>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <GeneralInput
+                label="Eyebrow label"
+                placeholder='e.g. "Letters from LinguAnna"'
+                value={footerData.newsletter.eyebrow}
+                onChange={(e) => updateNewsletter("eyebrow", e.target.value)}
+                error={footerErrors.newsletter?.eyebrow}
+              />
+              <GeneralInput
+                label="Description"
+                placeholder='e.g. "Quiet notes on language learning, confidence and better study rhythms."'
+                value={footerData.newsletter.description}
+                onChange={(e) =>
+                  updateNewsletter("description", e.target.value)
+                }
+                error={footerErrors.newsletter?.description}
+              />
+              <GeneralInput
+                label="Email input placeholder"
+                placeholder='e.g. "Email address"'
+                value={footerData.newsletter.placeholder}
+                onChange={(e) =>
+                  updateNewsletter("placeholder", e.target.value)
+                }
+                error={footerErrors.newsletter?.placeholder}
+              />
+              <GeneralInput
+                label="Subscribe button text"
+                placeholder='e.g. "Subscribe"'
+                value={footerData.newsletter.buttonText}
+                onChange={(e) =>
+                  updateNewsletter("buttonText", e.target.value)
+                }
+                error={footerErrors.newsletter?.buttonText}
+              />
+              <GeneralInput
+                label="Subscribing button text (loading)"
+                placeholder='e.g. "Subscribing..."'
+                value={footerData.newsletter.subscribingButtonText}
+                onChange={(e) =>
+                  updateNewsletter("subscribingButtonText", e.target.value)
+                }
+                error={footerErrors.newsletter?.subscribingButtonText}
+              />
+              <GeneralInput
+                label="Success message"
+                placeholder='e.g. "Thanks for subscribing!"'
+                value={footerData.newsletter.successMessage}
+                onChange={(e) =>
+                  updateNewsletter("successMessage", e.target.value)
+                }
+                error={footerErrors.newsletter?.successMessage}
+              />
+              <GeneralInput
+                label="Invalid email message"
+                placeholder='e.g. "Invalid email address."'
+                value={footerData.newsletter.invalidEmailMessage}
+                onChange={(e) =>
+                  updateNewsletter("invalidEmailMessage", e.target.value)
+                }
+                error={footerErrors.newsletter?.invalidEmailMessage}
+              />
+              <GeneralInput
+                label="Submit error message"
+                placeholder='e.g. "Something went wrong. Please try again later."'
+                value={footerData.newsletter.submitErrorMessage}
+                onChange={(e) =>
+                  updateNewsletter("submitErrorMessage", e.target.value)
+                }
+                error={footerErrors.newsletter?.submitErrorMessage}
+              />
             </div>
           </div>
 
