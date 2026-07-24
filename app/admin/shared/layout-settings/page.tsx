@@ -67,7 +67,6 @@ interface FooterData {
   socialLinks: SocialLink[];
   legalLinks: { label: string; url: string }[];
   copyrightText: string;
-  contactColumnTitle: string;
   legalColumnTitle: string;
   newsletter: NewsletterData;
 }
@@ -100,7 +99,6 @@ const emptyFooterData: FooterData = {
   ],
   legalLinks: [],
   copyrightText: "",
-  contactColumnTitle: "",
   legalColumnTitle: "",
   newsletter: emptyNewsletterData,
 };
@@ -137,7 +135,6 @@ export default function LayoutSettingsPage() {
   const [footerErrors, setFooterErrors] = useState<{
     brandName?: string;
     tagline?: string;
-    contactColumnTitle?: string;
     legalColumnTitle?: string;
     email?: string;
     socialLinks?: Array<{ enabled?: string; url?: string }>;
@@ -251,9 +248,6 @@ export default function LayoutSettingsPage() {
     const nextErrors: typeof footerErrors = {};
     nextErrors.brandName = requiredError(footerData.brandName);
     nextErrors.tagline = requiredError(footerData.tagline, true);
-    nextErrors.contactColumnTitle = requiredError(
-      footerData.contactColumnTitle,
-    );
     nextErrors.legalColumnTitle = requiredError(footerData.legalColumnTitle);
     nextErrors.email = requiredError(footerData.email);
     nextErrors.copyrightText = requiredError(footerData.copyrightText);
@@ -750,19 +744,6 @@ export default function LayoutSettingsPage() {
             </p>
 
             <div className="grid md:grid-cols-2 gap-4">
-              <GeneralInput
-                label="Contact Column Title"
-                placeholder="Contact"
-                value={footerData.contactColumnTitle}
-                onChange={(e) => {
-                  setFooterData({
-                    ...footerData,
-                    contactColumnTitle: e.target.value,
-                  });
-                  setFooterHasChanges(true);
-                }}
-                error={footerErrors.contactColumnTitle}
-              />
               <GeneralInput
                 label="Legal Column Title"
                 placeholder="Legal"
