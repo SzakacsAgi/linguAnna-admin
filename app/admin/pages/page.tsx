@@ -11,6 +11,7 @@ import {
   PenTool,
   FileText,
   TriangleAlert,
+  Languages,
 } from "lucide-react";
 
 export default function PagesAdminPage() {
@@ -71,6 +72,12 @@ export default function PagesAdminPage() {
       icon: TriangleAlert,
       href: "/admin/pages/not-found",
       sections: ["CTA", "Links"],
+    },
+    {
+      title: "Newsletter language",
+      icon: Languages,
+      href: "/admin/pages/newsletter-language",
+      sections: ["Header", "Form", "Invalid link"],
     },
   ];
 
