@@ -12,6 +12,7 @@ import {
   FileText,
   TriangleAlert,
   Languages,
+  MailX,
 } from "lucide-react";
 
 export default function PagesAdminPage() {
@@ -78,6 +79,12 @@ export default function PagesAdminPage() {
       icon: Languages,
       href: "/admin/pages/newsletter-language",
       sections: ["Header", "Form", "Invalid link"],
+    },
+    {
+      title: "Newsletter unsubscribed",
+      icon: MailX,
+      href: "/admin/pages/newsletter-unsubscribed",
+      sections: ["Content"],
     },
   ];
 
